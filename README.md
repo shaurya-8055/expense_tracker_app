@@ -7,6 +7,7 @@ A beautiful, feature-rich expense tracking application built with Flutter. Track
 ## ✨ Features
 
 ### 📊 Personal Expense Tracking
+
 - **Add/Edit/Delete Expenses**: Easily manage your expenses with a clean, intuitive interface
 - **Category Management**: Organize expenses into 8 categories:
   - 🍔 Food
@@ -19,6 +20,7 @@ A beautiful, feature-rich expense tracking application built with Flutter. Track
   - 📦 Other
 
 ### 💳 Udhari Management (Credit/Debt Tracking)
+
 - **Track Money Lent**: Keep track of money you've lent to others
 - **Track Money Borrowed**: Monitor money you've borrowed
 - **Payment Tracking**: Record partial payments
@@ -28,6 +30,7 @@ A beautiful, feature-rich expense tracking application built with Flutter. Track
 - **Contact Info**: Store phone numbers for easy follow-up
 
 ### 👥 Group Expenses (Splitwise-like Feature)
+
 - **Add Friends**: Manage your friend list
 - **Split Expenses**: Divide expenses among group members
 - **Flexible Splits**: Custom split amounts or equal division
@@ -36,6 +39,7 @@ A beautiful, feature-rich expense tracking application built with Flutter. Track
 - **Expense History**: Track all group expenses with friends
 
 ### 📈 Analytics & Visualization
+
 - **Interactive Pie Charts**: Visualize spending by category
 - **Period-based Statistics**: View expenses by week, month, or year
 - **Category Breakdown**: Detailed breakdown with percentages and progress bars
@@ -43,6 +47,7 @@ A beautiful, feature-rich expense tracking application built with Flutter. Track
 - **Udhari Overview**: Visual summary of money owed and owing
 
 ### 🔍 Advanced Features
+
 - **Search**: Find expenses quickly by title or notes
 - **Filter by Category**: Focus on specific expense categories
 - **Date Range Filtering**: View expenses within custom date ranges
@@ -51,6 +56,7 @@ A beautiful, feature-rich expense tracking application built with Flutter. Track
 - **Multi-tab Interface**: Easy navigation between different features
 
 ### 🎨 Beautiful UI
+
 - **Modern Material Design 3**: Clean, contemporary interface
 - **Gradient Cards**: Eye-catching visual elements
 - **Color-coded Categories**: Each category has unique colors and icons
@@ -61,6 +67,7 @@ A beautiful, feature-rich expense tracking application built with Flutter. Track
 ## ✨ Features
 
 ### 📊 Core Functionality
+
 - **Add/Edit/Delete Expenses**: Easily manage your expenses with a clean, intuitive interface
 - **Category Management**: Organize expenses into 8 categories:
   - 🍔 Food
@@ -73,12 +80,14 @@ A beautiful, feature-rich expense tracking application built with Flutter. Track
   - 📦 Other
 
 ### 📈 Analytics & Visualization
+
 - **Interactive Pie Charts**: Visualize spending by category
 - **Period-based Statistics**: View expenses by week, month, or year
 - **Category Breakdown**: Detailed breakdown with percentages and progress bars
 - **Monthly Summary**: Quick overview of current month's spending
 
 ### 🔍 Advanced Features
+
 - **Search**: Find expenses quickly by title or notes
 - **Filter by Category**: Focus on specific expense categories
 - **Date Range Filtering**: View expenses within custom date ranges
@@ -86,6 +95,7 @@ A beautiful, feature-rich expense tracking application built with Flutter. Track
 - **Persistent Storage**: All data saved locally using SharedPreferences
 
 ### 🎨 Beautiful UI
+
 - **Modern Material Design 3**: Clean, contemporary interface
 - **Gradient Cards**: Eye-catching visual elements
 - **Color-coded Categories**: Each category has unique colors and icons
@@ -137,17 +147,18 @@ lib/
 dependencies:
   flutter:
     sdk: flutter
-  provider: ^6.1.1           # State management
-  shared_preferences: ^2.2.2  # Local storage
-  fl_chart: ^0.66.0          # Charts
-  intl: ^0.19.0              # Date formatting
-  uuid: ^4.3.3               # Unique IDs
-  cupertino_icons: ^1.0.8    # iOS icons
+  provider: ^6.1.1 # State management
+  shared_preferences: ^2.2.2 # Local storage
+  fl_chart: ^0.66.0 # Charts
+  intl: ^0.19.0 # Date formatting
+  uuid: ^4.3.3 # Unique IDs
+  cupertino_icons: ^1.0.8 # iOS icons
 ```
 
 ## 🚀 Getting Started
 
 ### Prerequisites
+
 - Flutter SDK (3.9.2 or higher)
 - Dart SDK
 - Android Studio / VS Code
@@ -156,12 +167,14 @@ dependencies:
 ### Installation
 
 1. **Clone the repository**
+
    ```bash
    git clone <your-repo-url>
    cd expense_tracker_app
    ```
 
 2. **Install dependencies**
+
    ```bash
    flutter pub get
    ```
@@ -174,6 +187,7 @@ dependencies:
 ## 📱 How to Use
 
 ### Adding an Expense
+
 1. Tap the **"+ Add Expense"** button
 2. Enter expense details:
    - Title (required)
@@ -184,6 +198,7 @@ dependencies:
 3. Tap **"Add Expense"** to save
 
 ### Managing Udhari (Credit/Debt)
+
 1. From home screen, tap **"Udhari"** quick action button
 2. View summary of money lent and borrowed
 3. Use tabs to filter: All / Given / Taken
@@ -199,6 +214,7 @@ dependencies:
    - Tap "Settle" to mark as fully paid
 
 ### Split Expenses with Friends
+
 1. From home screen, tap **"Split Expense"** (Coming Soon)
 2. Add friends to your list
 3. Create group expenses:
@@ -211,21 +227,25 @@ dependencies:
 6. Track expense history with friends
 
 ### Editing an Expense
+
 1. Tap on any expense card in the list
 2. Modify the details
 3. Tap **"Update Expense"** to save changes
 
 ### Deleting an Expense
+
 - **Swipe left** on any expense card, OR
 - Open the expense and tap **"Delete Expense"**
 
 ### Filtering & Search
+
 1. Tap the **filter icon** in the header
 2. Select a category to filter by
 3. Use the search bar to find expenses by title or note
 4. Tap **"Clear All"** to remove filters
 
 ### Viewing Statistics
+
 1. Tap the **"Statistics"** tab at the bottom
 2. Switch between **This Week**, **This Month**, or **This Year**
 3. View:
@@ -241,6 +261,7 @@ dependencies:
 - **Background**: Light Gray (#F8F9FA)
 
 ### Category Colors
+
 - Food: Red (#FF6B6B)
 - Transport: Teal (#4ECDC4)
 - Shopping: Yellow (#FECA57)
@@ -262,7 +283,9 @@ The app follows **Clean Architecture** principles:
 - **Utils**: Constants and helper functions
 
 ### State Management
+
 Uses **Provider** pattern for:
+
 - Centralized expense management
 - Reactive UI updates
 - Efficient rebuilds
@@ -271,6 +294,7 @@ Uses **Provider** pattern for:
 ## 🔒 Data Persistence
 
 All expenses are stored locally using **SharedPreferences**:
+
 - Automatic saving on add/edit/delete
 - JSON serialization
 - No internet required

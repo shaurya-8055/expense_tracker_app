@@ -40,7 +40,7 @@ class UdhariProvider with ChangeNotifier {
     notifyListeners();
 
     _udharis = await _storageService.loadUdharis();
-    
+
     _isLoading = false;
     notifyListeners();
   }
@@ -71,7 +71,7 @@ class UdhariProvider with ChangeNotifier {
     if (index != -1) {
       final udhari = _udharis[index];
       final newAmountPaid = udhari.amountPaid + amount;
-      
+
       UdhariStatus newStatus;
       if (newAmountPaid >= udhari.amount) {
         newStatus = UdhariStatus.settled;
@@ -85,7 +85,7 @@ class UdhariProvider with ChangeNotifier {
         amountPaid: newAmountPaid,
         status: newStatus,
       );
-      
+
       await _storageService.saveUdharis(_udharis);
       notifyListeners();
     }
@@ -112,8 +112,10 @@ class UdhariProvider with ChangeNotifier {
   }
 
   List<Udhari> getUdharisByPerson(String personName) {
-    return _udharis.where((u) => 
-      u.personName.toLowerCase().contains(personName.toLowerCase())
-    ).toList();
+    return _udharis
+        .where(
+          (u) => u.personName.toLowerCase().contains(personName.toLowerCase()),
+        )
+        .toList();
   }
 }

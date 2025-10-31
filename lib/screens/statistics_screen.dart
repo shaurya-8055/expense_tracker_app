@@ -57,10 +57,7 @@ class _StatisticsScreenState extends State<StatisticsScreen> {
           SizedBox(height: 4),
           Text(
             'Track your spending patterns',
-            style: TextStyle(
-              fontSize: 14,
-              color: AppColors.textSecondary,
-            ),
+            style: TextStyle(fontSize: 14, color: AppColors.textSecondary),
           ),
         ],
       ),
@@ -71,9 +68,7 @@ class _StatisticsScreenState extends State<StatisticsScreen> {
     return Card(
       elevation: 2,
       shadowColor: Colors.black12,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(12),
-      ),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       child: Padding(
         padding: const EdgeInsets.all(4),
         child: Row(
@@ -89,7 +84,7 @@ class _StatisticsScreenState extends State<StatisticsScreen> {
 
   Widget _buildPeriodButton(String period) {
     final isSelected = _selectedPeriod == period;
-    
+
     return Expanded(
       child: InkWell(
         onTap: () {
@@ -149,10 +144,7 @@ class _StatisticsScreenState extends State<StatisticsScreen> {
                 children: [
                   Text(
                     _selectedPeriod,
-                    style: const TextStyle(
-                      color: Colors.white70,
-                      fontSize: 14,
-                    ),
+                    style: const TextStyle(color: Colors.white70, fontSize: 14),
                   ),
                   Container(
                     padding: const EdgeInsets.symmetric(
@@ -196,10 +188,7 @@ class _StatisticsScreenState extends State<StatisticsScreen> {
                 const SizedBox(height: 8),
                 Text(
                   'Average: ₹${(total / expenseCount).toStringAsFixed(2)} per expense',
-                  style: const TextStyle(
-                    color: Colors.white70,
-                    fontSize: 14,
-                  ),
+                  style: const TextStyle(color: Colors.white70, fontSize: 14),
                 ),
               ],
             ],
@@ -313,7 +302,7 @@ class _StatisticsScreenState extends State<StatisticsScreen> {
                   final percentage = (entry.value / total * 100);
                   final color = CategoryConfig.getCategoryColor(entry.key);
                   final icon = CategoryConfig.getCategoryIcon(entry.key);
-                  
+
                   return Padding(
                     padding: const EdgeInsets.only(bottom: 16),
                     child: Column(
@@ -327,11 +316,7 @@ class _StatisticsScreenState extends State<StatisticsScreen> {
                                 color: color.withOpacity(0.1),
                                 borderRadius: BorderRadius.circular(10),
                               ),
-                              child: Icon(
-                                icon,
-                                color: color,
-                                size: 20,
-                              ),
+                              child: Icon(icon, color: color, size: 20),
                             ),
                             const SizedBox(width: 12),
                             Expanded(
@@ -417,7 +402,8 @@ class _StatisticsScreenState extends State<StatisticsScreen> {
   }
 
   Map<ExpenseCategory, double> _getPeriodCategoryTotals(
-      ExpenseProvider provider) {
+    ExpenseProvider provider,
+  ) {
     final expenses = _getPeriodExpenses(provider);
     final Map<ExpenseCategory, double> totals = {};
 

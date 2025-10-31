@@ -20,7 +20,7 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
   final _titleController = TextEditingController();
   final _amountController = TextEditingController();
   final _noteController = TextEditingController();
-  
+
   ExpenseCategory _selectedCategory = ExpenseCategory.other;
   DateTime _selectedDate = DateTime.now();
 
@@ -51,7 +51,9 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
     return Scaffold(
       backgroundColor: AppColors.background,
       appBar: AppBar(
-        title: Text(_isEditing ? AppStrings.editExpense : AppStrings.addExpense),
+        title: Text(
+          _isEditing ? AppStrings.editExpense : AppStrings.addExpense,
+        ),
         backgroundColor: AppColors.primary,
         foregroundColor: Colors.white,
         elevation: 0,
@@ -86,9 +88,7 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
     return Card(
       elevation: 2,
       shadowColor: Colors.black12,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(12),
-      ),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       child: Padding(
         padding: const EdgeInsets.all(16),
         child: Column(
@@ -131,9 +131,7 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
     return Card(
       elevation: 2,
       shadowColor: Colors.black12,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(12),
-      ),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       child: Padding(
         padding: const EdgeInsets.all(16),
         child: Column(
@@ -150,7 +148,9 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
             const SizedBox(height: 8),
             TextFormField(
               controller: _amountController,
-              keyboardType: const TextInputType.numberWithOptions(decimal: true),
+              keyboardType: const TextInputType.numberWithOptions(
+                decimal: true,
+              ),
               inputFormatters: [
                 FilteringTextInputFormatter.allow(RegExp(r'^\d+\.?\d{0,2}')),
               ],
@@ -186,9 +186,7 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
     return Card(
       elevation: 2,
       shadowColor: Colors.black12,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(12),
-      ),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       child: Padding(
         padding: const EdgeInsets.all(16),
         child: Column(
@@ -210,7 +208,7 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
                 final isSelected = _selectedCategory == category;
                 final color = CategoryConfig.getCategoryColor(category);
                 final icon = CategoryConfig.getCategoryIcon(category);
-                
+
                 return InkWell(
                   onTap: () {
                     setState(() {
@@ -269,9 +267,7 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
     return Card(
       elevation: 2,
       shadowColor: Colors.black12,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(12),
-      ),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       child: InkWell(
         onTap: _selectDate,
         borderRadius: BorderRadius.circular(12),
@@ -321,10 +317,7 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
                   ],
                 ),
               ),
-              const Icon(
-                Icons.chevron_right,
-                color: AppColors.textSecondary,
-              ),
+              const Icon(Icons.chevron_right, color: AppColors.textSecondary),
             ],
           ),
         ),
@@ -336,9 +329,7 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
     return Card(
       elevation: 2,
       shadowColor: Colors.black12,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(12),
-      ),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       child: Padding(
         padding: const EdgeInsets.all(16),
         child: Column(
@@ -379,17 +370,12 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
         backgroundColor: AppColors.primary,
         foregroundColor: Colors.white,
         padding: const EdgeInsets.symmetric(vertical: 16),
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(12),
-        ),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
         elevation: 2,
       ),
       child: Text(
         _isEditing ? 'Update Expense' : 'Add Expense',
-        style: const TextStyle(
-          fontSize: 16,
-          fontWeight: FontWeight.w600,
-        ),
+        style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
       ),
     );
   }
@@ -401,16 +387,11 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
         foregroundColor: AppColors.error,
         side: const BorderSide(color: AppColors.error),
         padding: const EdgeInsets.symmetric(vertical: 16),
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(12),
-        ),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       ),
       child: const Text(
         'Delete Expense',
-        style: TextStyle(
-          fontSize: 16,
-          fontWeight: FontWeight.w600,
-        ),
+        style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
       ),
     );
   }
@@ -457,7 +438,7 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
       );
 
       final provider = Provider.of<ExpenseProvider>(context, listen: false);
-      
+
       if (_isEditing) {
         provider.updateExpense(widget.expense!.id, expense);
       } else {
@@ -465,12 +446,10 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
       }
 
       Navigator.pop(context);
-      
+
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text(
-            _isEditing ? 'Expense updated' : 'Expense added',
-          ),
+          content: Text(_isEditing ? 'Expense updated' : 'Expense added'),
           duration: const Duration(seconds: 2),
           backgroundColor: AppColors.success,
         ),
@@ -491,8 +470,10 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
           ),
           TextButton(
             onPressed: () {
-              Provider.of<ExpenseProvider>(context, listen: false)
-                  .deleteExpense(widget.expense!.id);
+              Provider.of<ExpenseProvider>(
+                context,
+                listen: false,
+              ).deleteExpense(widget.expense!.id);
               Navigator.pop(context); // Close dialog
               Navigator.pop(context); // Close screen
               ScaffoldMessenger.of(context).showSnackBar(
@@ -503,9 +484,7 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
                 ),
               );
             },
-            style: TextButton.styleFrom(
-              foregroundColor: AppColors.error,
-            ),
+            style: TextButton.styleFrom(foregroundColor: AppColors.error),
             child: const Text('Delete'),
           ),
         ],

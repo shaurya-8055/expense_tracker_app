@@ -12,7 +12,7 @@ class AppColors {
   static const success = Color(0xFF00B894);
   static const warning = Color(0xFFFDCB6E);
   static const error = Color(0xFFFF7675);
-  
+
   // Category Colors
   static const food = Color(0xFFFF6B6B);
   static const transport = Color(0xFF4ECDC4);

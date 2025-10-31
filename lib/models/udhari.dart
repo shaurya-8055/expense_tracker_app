@@ -5,11 +5,7 @@ enum UdhariType {
   taken, // Money you borrowed from someone (you need to pay)
 }
 
-enum UdhariStatus {
-  pending,
-  partiallyPaid,
-  settled,
-}
+enum UdhariStatus { pending, partiallyPaid, settled }
 
 class Udhari {
   final String id;
@@ -42,12 +38,14 @@ class Udhari {
 
   String get formattedDate => DateFormat('MMM dd, yyyy').format(date);
 
-  String get formattedDueDate =>
-      dueDate != null ? DateFormat('MMM dd, yyyy').format(dueDate!) : 'No due date';
+  String get formattedDueDate => dueDate != null
+      ? DateFormat('MMM dd, yyyy').format(dueDate!)
+      : 'No due date';
 
   String get formattedAmount => '₹${amount.toStringAsFixed(2)}';
 
-  String get formattedRemainingAmount => '₹${remainingAmount.toStringAsFixed(2)}';
+  String get formattedRemainingAmount =>
+      '₹${remainingAmount.toStringAsFixed(2)}';
 
   String get formattedAmountPaid => '₹${amountPaid.toStringAsFixed(2)}';
 

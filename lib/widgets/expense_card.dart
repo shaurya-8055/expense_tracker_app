@@ -29,20 +29,14 @@ class ExpenseCard extends StatelessWidget {
           color: AppColors.error,
           borderRadius: BorderRadius.circular(16),
         ),
-        child: const Icon(
-          Icons.delete,
-          color: Colors.white,
-          size: 28,
-        ),
+        child: const Icon(Icons.delete, color: Colors.white, size: 28),
       ),
       onDismissed: (_) => onDelete(),
       child: Card(
         margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
         elevation: 2,
         shadowColor: Colors.black12,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(16),
-        ),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
         child: InkWell(
           onTap: onTap,
           borderRadius: BorderRadius.circular(16),
@@ -58,14 +52,10 @@ class ExpenseCard extends StatelessWidget {
                     color: categoryColor.withOpacity(0.1),
                     borderRadius: BorderRadius.circular(12),
                   ),
-                  child: Icon(
-                    categoryIcon,
-                    color: categoryColor,
-                    size: 28,
-                  ),
+                  child: Icon(categoryIcon, color: categoryColor, size: 28),
                 ),
                 const SizedBox(width: 16),
-                
+
                 // Expense Details
                 Expanded(
                   child: Column(
@@ -127,7 +117,7 @@ class ExpenseCard extends StatelessWidget {
                     ],
                   ),
                 ),
-                
+
                 // Amount
                 Column(
                   crossAxisAlignment: CrossAxisAlignment.end,

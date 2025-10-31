@@ -9,7 +9,7 @@ class UdhariStorageService {
     try {
       final prefs = await SharedPreferences.getInstance();
       final String? udhariJson = prefs.getString(_udhariKey);
-      
+
       if (udhariJson == null) {
         return [];
       }

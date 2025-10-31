@@ -12,7 +12,8 @@ class UdhariScreen extends StatefulWidget {
   State<UdhariScreen> createState() => _UdhariScreenState();
 }
 
-class _UdhariScreenState extends State<UdhariScreen> with SingleTickerProviderStateMixin {
+class _UdhariScreenState extends State<UdhariScreen>
+    with SingleTickerProviderStateMixin {
   late TabController _tabController;
 
   @override
@@ -69,9 +70,7 @@ class _UdhariScreenState extends State<UdhariScreen> with SingleTickerProviderSt
         onPressed: () {
           Navigator.push(
             context,
-            MaterialPageRoute(
-              builder: (context) => const AddUdhariScreen(),
-            ),
+            MaterialPageRoute(builder: (context) => const AddUdhariScreen()),
           );
         },
         icon: const Icon(Icons.add),
@@ -99,8 +98,11 @@ class _UdhariScreenState extends State<UdhariScreen> with SingleTickerProviderSt
             borderRadius: BorderRadius.circular(20),
             boxShadow: [
               BoxShadow(
-                color: (provider.netBalance >= 0 ? AppColors.success : AppColors.error)
-                    .withOpacity(0.3),
+                color:
+                    (provider.netBalance >= 0
+                            ? AppColors.success
+                            : AppColors.error)
+                        .withOpacity(0.3),
                 blurRadius: 20,
                 offset: const Offset(0, 10),
               ),
@@ -118,11 +120,7 @@ class _UdhariScreenState extends State<UdhariScreen> with SingleTickerProviderSt
                       Icons.arrow_downward,
                     ),
                   ),
-                  Container(
-                    width: 1,
-                    height: 40,
-                    color: Colors.white30,
-                  ),
+                  Container(width: 1, height: 40, color: Colors.white30),
                   Expanded(
                     child: _buildSummaryItem(
                       'You Owe',
@@ -182,10 +180,7 @@ class _UdhariScreenState extends State<UdhariScreen> with SingleTickerProviderSt
         const SizedBox(height: 8),
         Text(
           label,
-          style: const TextStyle(
-            color: Colors.white70,
-            fontSize: 12,
-          ),
+          style: const TextStyle(color: Colors.white70, fontSize: 12),
         ),
         const SizedBox(height: 4),
         Text(
@@ -259,9 +254,7 @@ class _UdhariScreenState extends State<UdhariScreen> with SingleTickerProviderSt
       margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
       elevation: 2,
       shadowColor: Colors.black12,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(16),
-      ),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
       child: InkWell(
         onTap: () {
           Navigator.push(
@@ -339,7 +332,11 @@ class _UdhariScreenState extends State<UdhariScreen> with SingleTickerProviderSt
               const SizedBox(height: 12),
               Row(
                 children: [
-                  Icon(Icons.calendar_today, size: 14, color: AppColors.textSecondary),
+                  Icon(
+                    Icons.calendar_today,
+                    size: 14,
+                    color: AppColors.textSecondary,
+                  ),
                   const SizedBox(width: 4),
                   Text(
                     udhari.formattedDate,
@@ -363,7 +360,10 @@ class _UdhariScreenState extends State<UdhariScreen> with SingleTickerProviderSt
                   ],
                   const Spacer(),
                   Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 8,
+                      vertical: 4,
+                    ),
                     decoration: BoxDecoration(
                       color: udhari.isSettled
                           ? AppColors.success.withOpacity(0.1)
@@ -375,7 +375,9 @@ class _UdhariScreenState extends State<UdhariScreen> with SingleTickerProviderSt
                       style: TextStyle(
                         fontSize: 11,
                         fontWeight: FontWeight.w600,
-                        color: udhari.isSettled ? AppColors.success : AppColors.warning,
+                        color: udhari.isSettled
+                            ? AppColors.success
+                            : AppColors.warning,
                       ),
                     ),
                   ),
@@ -400,7 +402,8 @@ class _UdhariScreenState extends State<UdhariScreen> with SingleTickerProviderSt
                   children: [
                     Expanded(
                       child: OutlinedButton.icon(
-                        onPressed: () => _showAddPaymentDialog(udhari, provider),
+                        onPressed: () =>
+                            _showAddPaymentDialog(udhari, provider),
                         icon: const Icon(Icons.payment, size: 16),
                         label: const Text('Add Payment'),
                         style: OutlinedButton.styleFrom(
@@ -433,7 +436,7 @@ class _UdhariScreenState extends State<UdhariScreen> with SingleTickerProviderSt
 
   void _showAddPaymentDialog(Udhari udhari, UdhariProvider provider) {
     final controller = TextEditingController();
-    
+
     showDialog(
       context: context,
       builder: (context) => AlertDialog(

@@ -27,13 +27,17 @@ class ExpenseProvider with ChangeNotifier {
     // Apply date range filter
     if (_filterStartDate != null) {
       filtered = filtered.where((expense) {
-        return expense.date.isAfter(_filterStartDate!.subtract(const Duration(days: 1)));
+        return expense.date.isAfter(
+          _filterStartDate!.subtract(const Duration(days: 1)),
+        );
       }).toList();
     }
 
     if (_filterEndDate != null) {
       filtered = filtered.where((expense) {
-        return expense.date.isBefore(_filterEndDate!.add(const Duration(days: 1)));
+        return expense.date.isBefore(
+          _filterEndDate!.add(const Duration(days: 1)),
+        );
       }).toList();
     }
 
@@ -47,8 +51,11 @@ class ExpenseProvider with ChangeNotifier {
     // Apply search filter
     if (_searchQuery.isNotEmpty) {
       filtered = filtered.where((expense) {
-        return expense.title.toLowerCase().contains(_searchQuery.toLowerCase()) ||
-               (expense.note?.toLowerCase().contains(_searchQuery.toLowerCase()) ?? false);
+        return expense.title.toLowerCase().contains(
+              _searchQuery.toLowerCase(),
+            ) ||
+            (expense.note?.toLowerCase().contains(_searchQuery.toLowerCase()) ??
+                false);
       }).toList();
     }
 
@@ -72,11 +79,12 @@ class ExpenseProvider with ChangeNotifier {
 
   Map<ExpenseCategory, double> get categoryTotals {
     final Map<ExpenseCategory, double> totals = {};
-    
+
     for (var expense in expenses) {
-      totals[expense.category] = (totals[expense.category] ?? 0) + expense.amount;
+      totals[expense.category] =
+          (totals[expense.category] ?? 0) + expense.amount;
     }
-    
+
     return totals;
   }
 
@@ -85,7 +93,7 @@ class ExpenseProvider with ChangeNotifier {
     notifyListeners();
 
     _expenses = await _storageService.loadExpenses();
-    
+
     _isLoading = false;
     notifyListeners();
   }
@@ -146,7 +154,7 @@ class ExpenseProvider with ChangeNotifier {
   List<Expense> getExpensesByDateRange(DateTime start, DateTime end) {
     return _expenses.where((expense) {
       return expense.date.isAfter(start.subtract(const Duration(days: 1))) &&
-             expense.date.isBefore(end.add(const Duration(days: 1)));
+          expense.date.isBefore(end.add(const Duration(days: 1)));
     }).toList();
   }
 }

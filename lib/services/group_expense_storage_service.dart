@@ -10,7 +10,7 @@ class GroupExpenseStorageService {
     try {
       final prefs = await SharedPreferences.getInstance();
       final String? friendsJson = prefs.getString(_friendsKey);
-      
+
       if (friendsJson == null) {
         return [];
       }
@@ -38,7 +38,7 @@ class GroupExpenseStorageService {
     try {
       final prefs = await SharedPreferences.getInstance();
       final String? expensesJson = prefs.getString(_groupExpensesKey);
-      
+
       if (expensesJson == null) {
         return [];
       }

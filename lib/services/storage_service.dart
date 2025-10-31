@@ -9,7 +9,7 @@ class StorageService {
     try {
       final prefs = await SharedPreferences.getInstance();
       final String? expensesJson = prefs.getString(_expensesKey);
-      
+
       if (expensesJson == null) {
         return [];
       }

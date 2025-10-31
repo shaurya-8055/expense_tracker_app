@@ -6,10 +6,7 @@ import '../utils/constants.dart';
 class CategoryChart extends StatelessWidget {
   final Map<ExpenseCategory, double> categoryTotals;
 
-  const CategoryChart({
-    super.key,
-    required this.categoryTotals,
-  });
+  const CategoryChart({super.key, required this.categoryTotals});
 
   @override
   Widget build(BuildContext context) {
@@ -19,10 +16,7 @@ class CategoryChart extends StatelessWidget {
         child: Center(
           child: Text(
             'No data to display',
-            style: TextStyle(
-              color: AppColors.textSecondary,
-              fontSize: 14,
-            ),
+            style: TextStyle(color: AppColors.textSecondary, fontSize: 14),
           ),
         ),
       );
@@ -59,10 +53,7 @@ class CategoryChart extends StatelessWidget {
 class CategoryLegend extends StatelessWidget {
   final Map<ExpenseCategory, double> categoryTotals;
 
-  const CategoryLegend({
-    super.key,
-    required this.categoryTotals,
-  });
+  const CategoryLegend({super.key, required this.categoryTotals});
 
   @override
   Widget build(BuildContext context) {

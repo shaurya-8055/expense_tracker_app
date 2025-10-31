@@ -41,10 +41,7 @@ class _HomeScreenState extends State<HomeScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final pages = [
-      _buildExpensesPage(),
-      const StatisticsScreen(),
-    ];
+    final pages = [_buildExpensesPage(), const StatisticsScreen()];
 
     return Scaffold(
       backgroundColor: AppColors.background,
@@ -55,10 +52,7 @@ class _HomeScreenState extends State<HomeScreen> {
         selectedItemColor: AppColors.primary,
         unselectedItemColor: AppColors.textSecondary,
         items: const [
-          BottomNavigationBarItem(
-            icon: Icon(Icons.list),
-            label: 'Expenses',
-          ),
+          BottomNavigationBarItem(icon: Icon(Icons.list), label: 'Expenses'),
           BottomNavigationBarItem(
             icon: Icon(Icons.pie_chart),
             label: 'Statistics',
@@ -69,9 +63,7 @@ class _HomeScreenState extends State<HomeScreen> {
         onPressed: () {
           Navigator.push(
             context,
-            MaterialPageRoute(
-              builder: (context) => const AddExpenseScreen(),
-            ),
+            MaterialPageRoute(builder: (context) => const AddExpenseScreen()),
           );
         },
         icon: const Icon(Icons.add),
@@ -150,9 +142,7 @@ class _HomeScreenState extends State<HomeScreen> {
               () {
                 Navigator.push(
                   context,
-                  MaterialPageRoute(
-                    builder: (context) => const UdhariScreen(),
-                  ),
+                  MaterialPageRoute(builder: (context) => const UdhariScreen()),
                 );
               },
             ),
@@ -242,10 +232,7 @@ class _HomeScreenState extends State<HomeScreen> {
                     children: [
                       Text(
                         AppStrings.thisMonth,
-                        style: TextStyle(
-                          color: Colors.white70,
-                          fontSize: 14,
-                        ),
+                        style: TextStyle(color: Colors.white70, fontSize: 14),
                       ),
                       SizedBox(height: 4),
                       Text(
@@ -294,7 +281,8 @@ class _HomeScreenState extends State<HomeScreen> {
   Widget _buildFilterBar() {
     return Consumer<ExpenseProvider>(
       builder: (context, provider, child) {
-        final hasFilters = provider.filterStartDate != null ||
+        final hasFilters =
+            provider.filterStartDate != null ||
             provider.filterCategory != null ||
             provider.searchQuery.isNotEmpty;
 
@@ -364,9 +352,7 @@ class _HomeScreenState extends State<HomeScreen> {
     return Consumer<ExpenseProvider>(
       builder: (context, provider, child) {
         if (provider.isLoading) {
-          return const Center(
-            child: CircularProgressIndicator(),
-          );
+          return const Center(child: CircularProgressIndicator());
         }
 
         if (provider.expenses.isEmpty) {
@@ -428,7 +414,7 @@ class _HomeScreenState extends State<HomeScreen> {
 
   void _showFilterDialog() {
     final provider = Provider.of<ExpenseProvider>(context, listen: false);
-    
+
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
@@ -519,7 +505,7 @@ class _HomeScreenState extends State<HomeScreen> {
     StateSetter setState,
   ) {
     final isSelected = provider.filterCategory == category;
-    
+
     return FilterChip(
       label: Text(label),
       selected: isSelected,
@@ -549,8 +535,10 @@ class _HomeScreenState extends State<HomeScreen> {
           ),
           TextButton(
             onPressed: () {
-              Provider.of<ExpenseProvider>(context, listen: false)
-                  .deleteExpense(expense.id);
+              Provider.of<ExpenseProvider>(
+                context,
+                listen: false,
+              ).deleteExpense(expense.id);
               Navigator.pop(context);
               ScaffoldMessenger.of(context).showSnackBar(
                 const SnackBar(
@@ -559,9 +547,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 ),
               );
             },
-            style: TextButton.styleFrom(
-              foregroundColor: AppColors.error,
-            ),
+            style: TextButton.styleFrom(foregroundColor: AppColors.error),
             child: const Text('Delete'),
           ),
         ],

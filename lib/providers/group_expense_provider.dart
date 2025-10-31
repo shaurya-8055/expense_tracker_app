@@ -5,7 +5,8 @@ import '../services/group_expense_storage_service.dart';
 class GroupExpenseProvider with ChangeNotifier {
   List<Friend> _friends = [];
   List<GroupExpense> _groupExpenses = [];
-  final GroupExpenseStorageService _storageService = GroupExpenseStorageService();
+  final GroupExpenseStorageService _storageService =
+      GroupExpenseStorageService();
   bool _isLoading = false;
   final String _currentUserId = 'me'; // Current user ID
 
@@ -20,7 +21,7 @@ class GroupExpenseProvider with ChangeNotifier {
 
     _friends = await _storageService.loadFriends();
     _groupExpenses = await _storageService.loadGroupExpenses();
-    
+
     _isLoading = false;
     notifyListeners();
   }
@@ -62,7 +63,10 @@ class GroupExpenseProvider with ChangeNotifier {
     notifyListeners();
   }
 
-  Future<void> updateGroupExpense(String id, GroupExpense updatedExpense) async {
+  Future<void> updateGroupExpense(
+    String id,
+    GroupExpense updatedExpense,
+  ) async {
     final index = _groupExpenses.indexWhere((e) => e.id == id);
     if (index != -1) {
       _groupExpenses[index] = updatedExpense;
@@ -80,7 +84,7 @@ class GroupExpenseProvider with ChangeNotifier {
   // Calculate balances
   Map<String, double> getBalances() {
     final Map<String, double> balances = {};
-    
+
     // Initialize balances for current user and all friends
     balances[_currentUserId] = 0;
     for (var friend in _friends) {
@@ -91,7 +95,7 @@ class GroupExpenseProvider with ChangeNotifier {
       for (var entry in expense.splits.entries) {
         final friendId = entry.key;
         final amount = entry.value;
-        
+
         if (friendId == expense.paidBy) {
           continue; // Skip if they paid for themselves
         }
@@ -113,7 +117,7 @@ class GroupExpenseProvider with ChangeNotifier {
   List<Settlement> getSettlementSuggestions() {
     final balances = getBalances();
     final List<Settlement> settlements = [];
-    
+
     final creditors = <String, double>{};
     final debtors = <String, double>{};
 
@@ -127,18 +131,24 @@ class GroupExpenseProvider with ChangeNotifier {
 
     // Greedy algorithm to minimize transactions
     while (creditors.isNotEmpty && debtors.isNotEmpty) {
-      final maxCreditor = creditors.entries.reduce((a, b) => a.value > b.value ? a : b);
-      final maxDebtor = debtors.entries.reduce((a, b) => a.value > b.value ? a : b);
+      final maxCreditor = creditors.entries.reduce(
+        (a, b) => a.value > b.value ? a : b,
+      );
+      final maxDebtor = debtors.entries.reduce(
+        (a, b) => a.value > b.value ? a : b,
+      );
 
-      final amount = maxCreditor.value < maxDebtor.value 
-          ? maxCreditor.value 
+      final amount = maxCreditor.value < maxDebtor.value
+          ? maxCreditor.value
           : maxDebtor.value;
 
-      settlements.add(Settlement(
-        fromFriendId: maxDebtor.key,
-        toFriendId: maxCreditor.key,
-        amount: amount,
-      ));
+      settlements.add(
+        Settlement(
+          fromFriendId: maxDebtor.key,
+          toFriendId: maxCreditor.key,
+          amount: amount,
+        ),
+      );
 
       creditors[maxCreditor.key] = maxCreditor.value - amount;
       debtors[maxDebtor.key] = maxDebtor.value - amount;
@@ -165,8 +175,9 @@ class GroupExpenseProvider with ChangeNotifier {
   }
 
   List<GroupExpense> getExpensesWithFriend(String friendId) {
-    return _groupExpenses.where((e) => 
-      e.participants.contains(friendId) || e.paidBy == friendId
-    ).toList()..sort((a, b) => b.date.compareTo(a.date));
+    return _groupExpenses
+        .where((e) => e.participants.contains(friendId) || e.paidBy == friendId)
+        .toList()
+      ..sort((a, b) => b.date.compareTo(a.date));
   }
 }

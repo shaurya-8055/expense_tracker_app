@@ -21,7 +21,7 @@ class _AddUdhariScreenState extends State<AddUdhariScreen> {
   final _amountController = TextEditingController();
   final _noteController = TextEditingController();
   final _phoneController = TextEditingController();
-  
+
   UdhariType _selectedType = UdhariType.given;
   DateTime _selectedDate = DateTime.now();
   DateTime? _selectedDueDate;
@@ -94,9 +94,7 @@ class _AddUdhariScreenState extends State<AddUdhariScreen> {
     return Card(
       elevation: 2,
       shadowColor: Colors.black12,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(12),
-      ),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       child: Padding(
         padding: const EdgeInsets.all(16),
         child: Column(
@@ -148,7 +146,7 @@ class _AddUdhariScreenState extends State<AddUdhariScreen> {
     Color color,
   ) {
     final isSelected = _selectedType == type;
-    
+
     return InkWell(
       onTap: () {
         setState(() {
@@ -159,7 +157,9 @@ class _AddUdhariScreenState extends State<AddUdhariScreen> {
       child: Container(
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
-          color: isSelected ? color.withOpacity(0.1) : Colors.grey.withOpacity(0.05),
+          color: isSelected
+              ? color.withOpacity(0.1)
+              : Colors.grey.withOpacity(0.05),
           borderRadius: BorderRadius.circular(12),
           border: Border.all(
             color: isSelected ? color : Colors.transparent,
@@ -188,7 +188,9 @@ class _AddUdhariScreenState extends State<AddUdhariScreen> {
               subtitle,
               style: TextStyle(
                 fontSize: 11,
-                color: isSelected ? color.withOpacity(0.7) : AppColors.textSecondary,
+                color: isSelected
+                    ? color.withOpacity(0.7)
+                    : AppColors.textSecondary,
               ),
               textAlign: TextAlign.center,
             ),
@@ -202,9 +204,7 @@ class _AddUdhariScreenState extends State<AddUdhariScreen> {
     return Card(
       elevation: 2,
       shadowColor: Colors.black12,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(12),
-      ),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       child: Padding(
         padding: const EdgeInsets.all(16),
         child: Column(
@@ -247,9 +247,7 @@ class _AddUdhariScreenState extends State<AddUdhariScreen> {
     return Card(
       elevation: 2,
       shadowColor: Colors.black12,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(12),
-      ),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       child: Padding(
         padding: const EdgeInsets.all(16),
         child: Column(
@@ -266,7 +264,9 @@ class _AddUdhariScreenState extends State<AddUdhariScreen> {
             const SizedBox(height: 8),
             TextFormField(
               controller: _amountController,
-              keyboardType: const TextInputType.numberWithOptions(decimal: true),
+              keyboardType: const TextInputType.numberWithOptions(
+                decimal: true,
+              ),
               inputFormatters: [
                 FilteringTextInputFormatter.allow(RegExp(r'^\d+\.?\d{0,2}')),
               ],
@@ -279,8 +279,8 @@ class _AddUdhariScreenState extends State<AddUdhariScreen> {
               style: TextStyle(
                 fontSize: 24,
                 fontWeight: FontWeight.bold,
-                color: _selectedType == UdhariType.given 
-                    ? AppColors.success 
+                color: _selectedType == UdhariType.given
+                    ? AppColors.success
                     : AppColors.error,
               ),
               validator: (value) {
@@ -304,9 +304,7 @@ class _AddUdhariScreenState extends State<AddUdhariScreen> {
     return Card(
       elevation: 2,
       shadowColor: Colors.black12,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(12),
-      ),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       child: Padding(
         padding: const EdgeInsets.all(16),
         child: Column(
@@ -345,9 +343,7 @@ class _AddUdhariScreenState extends State<AddUdhariScreen> {
     return Card(
       elevation: 2,
       shadowColor: Colors.black12,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(12),
-      ),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       child: InkWell(
         onTap: _selectDate,
         borderRadius: BorderRadius.circular(12),
@@ -397,10 +393,7 @@ class _AddUdhariScreenState extends State<AddUdhariScreen> {
                   ],
                 ),
               ),
-              const Icon(
-                Icons.chevron_right,
-                color: AppColors.textSecondary,
-              ),
+              const Icon(Icons.chevron_right, color: AppColors.textSecondary),
             ],
           ),
         ),
@@ -412,9 +405,7 @@ class _AddUdhariScreenState extends State<AddUdhariScreen> {
     return Card(
       elevation: 2,
       shadowColor: Colors.black12,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(12),
-      ),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       child: InkWell(
         onTap: _selectDueDate,
         borderRadius: BorderRadius.circular(12),
@@ -479,10 +470,7 @@ class _AddUdhariScreenState extends State<AddUdhariScreen> {
                   color: AppColors.textSecondary,
                 )
               else
-                const Icon(
-                  Icons.chevron_right,
-                  color: AppColors.textSecondary,
-                ),
+                const Icon(Icons.chevron_right, color: AppColors.textSecondary),
             ],
           ),
         ),
@@ -494,9 +482,7 @@ class _AddUdhariScreenState extends State<AddUdhariScreen> {
     return Card(
       elevation: 2,
       shadowColor: Colors.black12,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(12),
-      ),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       child: Padding(
         padding: const EdgeInsets.all(16),
         child: Column(
@@ -537,17 +523,12 @@ class _AddUdhariScreenState extends State<AddUdhariScreen> {
         backgroundColor: AppColors.primary,
         foregroundColor: Colors.white,
         padding: const EdgeInsets.symmetric(vertical: 16),
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(12),
-        ),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
         elevation: 2,
       ),
       child: Text(
         _isEditing ? 'Update Udhari' : 'Add Udhari',
-        style: const TextStyle(
-          fontSize: 16,
-          fontWeight: FontWeight.w600,
-        ),
+        style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
       ),
     );
   }
@@ -559,16 +540,11 @@ class _AddUdhariScreenState extends State<AddUdhariScreen> {
         foregroundColor: AppColors.error,
         side: const BorderSide(color: AppColors.error),
         padding: const EdgeInsets.symmetric(vertical: 16),
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(12),
-        ),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       ),
       child: const Text(
         'Delete Udhari',
-        style: TextStyle(
-          fontSize: 16,
-          fontWeight: FontWeight.w600,
-        ),
+        style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
       ),
     );
   }
@@ -604,7 +580,8 @@ class _AddUdhariScreenState extends State<AddUdhariScreen> {
   Future<void> _selectDueDate() async {
     final DateTime? picked = await showDatePicker(
       context: context,
-      initialDate: _selectedDueDate ?? DateTime.now().add(const Duration(days: 7)),
+      initialDate:
+          _selectedDueDate ?? DateTime.now().add(const Duration(days: 7)),
       firstDate: DateTime.now(),
       lastDate: DateTime.now().add(const Duration(days: 365)),
       builder: (context, child) {
@@ -649,7 +626,7 @@ class _AddUdhariScreenState extends State<AddUdhariScreen> {
       );
 
       final provider = Provider.of<UdhariProvider>(context, listen: false);
-      
+
       if (_isEditing) {
         provider.updateUdhari(widget.udhari!.id, udhari);
       } else {
@@ -657,12 +634,10 @@ class _AddUdhariScreenState extends State<AddUdhariScreen> {
       }
 
       Navigator.pop(context);
-      
+
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text(
-            _isEditing ? 'Udhari updated' : 'Udhari added',
-          ),
+          content: Text(_isEditing ? 'Udhari updated' : 'Udhari added'),
           duration: const Duration(seconds: 2),
           backgroundColor: AppColors.success,
         ),
@@ -675,7 +650,9 @@ class _AddUdhariScreenState extends State<AddUdhariScreen> {
       context: context,
       builder: (context) => AlertDialog(
         title: const Text('Delete Udhari'),
-        content: const Text('Are you sure you want to delete this udhari record?'),
+        content: const Text(
+          'Are you sure you want to delete this udhari record?',
+        ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
@@ -683,8 +660,10 @@ class _AddUdhariScreenState extends State<AddUdhariScreen> {
           ),
           TextButton(
             onPressed: () {
-              Provider.of<UdhariProvider>(context, listen: false)
-                  .deleteUdhari(widget.udhari!.id);
+              Provider.of<UdhariProvider>(
+                context,
+                listen: false,
+              ).deleteUdhari(widget.udhari!.id);
               Navigator.pop(context); // Close dialog
               Navigator.pop(context); // Close screen
               ScaffoldMessenger.of(context).showSnackBar(
@@ -695,9 +674,7 @@ class _AddUdhariScreenState extends State<AddUdhariScreen> {
                 ),
               );
             },
-            style: TextButton.styleFrom(
-              foregroundColor: AppColors.error,
-            ),
+            style: TextButton.styleFrom(foregroundColor: AppColors.error),
             child: const Text('Delete'),
           ),
         ],
