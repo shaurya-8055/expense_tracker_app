@@ -154,10 +154,7 @@ class _HomeScreenState extends State<HomeScreen> {
               Icons.people,
               AppColors.secondary,
               () {
-                // Navigate to group expenses (will create next)
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text('Group expenses coming soon!')),
-                );
+                Navigator.pushNamed(context, '/group-expenses');
               },
             ),
           ),
