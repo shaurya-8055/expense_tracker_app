@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../providers/group_expense_provider.dart';
-import '../models/group_expense.dart';
 
 class GroupExpenseScreen extends StatelessWidget {
   const GroupExpenseScreen({super.key});
