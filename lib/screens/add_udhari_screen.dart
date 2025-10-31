@@ -229,7 +229,10 @@ class _AddUdhariScreenState extends State<AddUdhariScreen> {
                   label: const Text('From Contacts'),
                   style: TextButton.styleFrom(
                     foregroundColor: AppColors.primary,
-                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 8,
+                      vertical: 4,
+                    ),
                   ),
                 ),
               ],

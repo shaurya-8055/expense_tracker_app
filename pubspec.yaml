@@ -63,13 +63,10 @@ dependencies:
   http: ^1.1.0
 
   # PostgreSQL database client
-  
 
   # WebSocket for real-time updates
-  
 
   # Secure storage for credentials
-  
 
   # Connectivity checking
   postgres: ^3.5.9
@@ -78,8 +75,7 @@ dependencies:
   connectivity_plus: ^7.0.0
 
   # Contact access
-  
- 
+
   contacts_service: ^0.6.3
   permission_handler: ^12.0.1
 

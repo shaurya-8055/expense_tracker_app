@@ -24,12 +24,12 @@ class _ContactPickerScreenState extends State<ContactPickerScreen>
     with SingleTickerProviderStateMixin {
   late TabController _tabController;
   final TextEditingController _searchController = TextEditingController();
-  
+
   List<ContactMatch> _friendsWithAccounts = [];
   List<Contact> _allContacts = [];
   List<Contact> _filteredContacts = [];
   List<ContactMatch> _selectedContacts = [];
-  
+
   bool _isLoading = true;
   bool _hasPermission = false;
   String _searchQuery = '';
@@ -56,7 +56,7 @@ class _ContactPickerScreenState extends State<ContactPickerScreen>
     try {
       // Request permission
       _hasPermission = await ContactService.requestContactsPermission();
-      
+
       if (!_hasPermission) {
         setState(() {
           _isLoading = false;
@@ -66,7 +66,8 @@ class _ContactPickerScreenState extends State<ContactPickerScreen>
 
       // Load contacts and find friends with accounts
       final contacts = await ContactService.fetchContacts();
-      final friendsWithAccounts = await ContactService.findFriendsWithAccounts();
+      final friendsWithAccounts =
+          await ContactService.findFriendsWithAccounts();
 
       setState(() {
         _allContacts = contacts;
@@ -97,7 +98,8 @@ class _ContactPickerScreenState extends State<ContactPickerScreen>
       } else {
         _filteredContacts = _allContacts.where((contact) {
           final name = contact.displayName?.toLowerCase() ?? '';
-          final phones = contact.phones?.map((p) => p.value ?? '').join(' ') ?? '';
+          final phones =
+              contact.phones?.map((p) => p.value ?? '').join(' ') ?? '';
           return name.contains(query.toLowerCase()) || phones.contains(query);
         }).toList();
       }
@@ -106,8 +108,12 @@ class _ContactPickerScreenState extends State<ContactPickerScreen>
 
   void _toggleContactSelection(ContactMatch contactMatch) {
     setState(() {
-      if (_selectedContacts.any((c) => c.contact.identifier == contactMatch.contact.identifier)) {
-        _selectedContacts.removeWhere((c) => c.contact.identifier == contactMatch.contact.identifier);
+      if (_selectedContacts.any(
+        (c) => c.contact.identifier == contactMatch.contact.identifier,
+      )) {
+        _selectedContacts.removeWhere(
+          (c) => c.contact.identifier == contactMatch.contact.identifier,
+        );
       } else {
         _selectedContacts.add(contactMatch);
       }
@@ -118,26 +124,31 @@ class _ContactPickerScreenState extends State<ContactPickerScreen>
     if (_selectedContacts.isEmpty) return;
 
     try {
-      final provider = Provider.of<SyncedGroupExpenseProvider>(context, listen: false);
-      
+      final provider = Provider.of<SyncedGroupExpenseProvider>(
+        context,
+        listen: false,
+      );
+
       setState(() {
         _isLoading = true;
       });
 
       // Add contacts as friends
       await ContactService.addContactsAsFriends(_selectedContacts);
-      
+
       // Refresh provider data
       // This would trigger a refresh of the friends list
-      
+
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Added ${_selectedContacts.length} friends successfully!'),
+            content: Text(
+              'Added ${_selectedContacts.length} friends successfully!',
+            ),
             backgroundColor: Colors.green,
           ),
         );
-        
+
         Navigator.pop(context, _selectedContacts);
       }
     } catch (e) {
@@ -165,7 +176,7 @@ class _ContactPickerScreenState extends State<ContactPickerScreen>
       });
 
       final inviteLinks = await ContactService.inviteContacts(
-        _selectedContacts.map((cm) => cm.contact).toList()
+        _selectedContacts.map((cm) => cm.contact).toList(),
       );
 
       if (mounted) {
@@ -200,12 +211,14 @@ class _ContactPickerScreenState extends State<ContactPickerScreen>
             const SizedBox(height: 16),
             const Text('Share these links with your friends:'),
             const SizedBox(height: 8),
-            ...inviteLinks.take(3).map((link) => 
-              SelectableText(
-                link,
-                style: const TextStyle(fontSize: 12),
-              )
-            ),
+            ...inviteLinks
+                .take(3)
+                .map(
+                  (link) => SelectableText(
+                    link,
+                    style: const TextStyle(fontSize: 12),
+                  ),
+                ),
             if (inviteLinks.length > 3)
               Text('... and ${inviteLinks.length - 3} more'),
           ],
@@ -248,10 +261,19 @@ class _ContactPickerScreenState extends State<ContactPickerScreen>
         actions: [
           if (_selectedContacts.isNotEmpty)
             TextButton(
-              onPressed: _isLoading ? null : (widget.isForInvite ? _inviteSelectedContacts : _addSelectedFriends),
+              onPressed: _isLoading
+                  ? null
+                  : (widget.isForInvite
+                        ? _inviteSelectedContacts
+                        : _addSelectedFriends),
               child: Text(
-                widget.isForInvite ? 'INVITE (${_selectedContacts.length})' : 'ADD (${_selectedContacts.length})',
-                style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+                widget.isForInvite
+                    ? 'INVITE (${_selectedContacts.length})'
+                    : 'ADD (${_selectedContacts.length})',
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontWeight: FontWeight.bold,
+                ),
               ),
             ),
         ],
@@ -261,9 +283,9 @@ class _ContactPickerScreenState extends State<ContactPickerScreen>
           const ConnectionStatusWidget(),
           _buildSearchBar(),
           Expanded(
-            child: _isLoading 
-              ? const Center(child: CircularProgressIndicator())
-              : !_hasPermission
+            child: _isLoading
+                ? const Center(child: CircularProgressIndicator())
+                : !_hasPermission
                 ? _buildPermissionDenied()
                 : TabBarView(
                     controller: _tabController,
@@ -306,11 +328,7 @@ class _ContactPickerScreenState extends State<ContactPickerScreen>
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(
-              Icons.contacts,
-              size: 80,
-              color: Colors.grey.shade400,
-            ),
+            Icon(Icons.contacts, size: 80, color: Colors.grey.shade400),
             const SizedBox(height: 24),
             Text(
               'Contacts Permission Required',
@@ -324,10 +342,7 @@ class _ContactPickerScreenState extends State<ContactPickerScreen>
             Text(
               'To find your friends who already use the app, we need access to your contacts.',
               textAlign: TextAlign.center,
-              style: TextStyle(
-                fontSize: 16,
-                color: Colors.grey.shade600,
-              ),
+              style: TextStyle(fontSize: 16, color: Colors.grey.shade600),
             ),
             const SizedBox(height: 32),
             ElevatedButton(
@@ -335,7 +350,10 @@ class _ContactPickerScreenState extends State<ContactPickerScreen>
               style: ElevatedButton.styleFrom(
                 backgroundColor: AppColors.primary,
                 foregroundColor: Colors.white,
-                padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 12),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 32,
+                  vertical: 12,
+                ),
               ),
               child: const Text('Grant Permission'),
             ),
@@ -350,7 +368,8 @@ class _ContactPickerScreenState extends State<ContactPickerScreen>
       return _buildEmptyState(
         icon: Icons.person_search,
         title: 'No Friends Found',
-        subtitle: 'None of your contacts have the app yet.\nInvite them to join!',
+        subtitle:
+            'None of your contacts have the app yet.\nInvite them to join!',
       );
     }
 
@@ -359,7 +378,7 @@ class _ContactPickerScreenState extends State<ContactPickerScreen>
       itemBuilder: (context, index) {
         final contactMatch = _friendsWithAccounts[index];
         final isSelected = _selectedContacts.any(
-          (c) => c.contact.identifier == contactMatch.contact.identifier
+          (c) => c.contact.identifier == contactMatch.contact.identifier,
         );
 
         return _buildContactMatchTile(contactMatch, isSelected);
@@ -372,9 +391,9 @@ class _ContactPickerScreenState extends State<ContactPickerScreen>
       return _buildEmptyState(
         icon: Icons.contact_phone,
         title: _searchQuery.isEmpty ? 'No Contacts' : 'No Results',
-        subtitle: _searchQuery.isEmpty 
-          ? 'No contacts found on your device.'
-          : 'No contacts match your search.',
+        subtitle: _searchQuery.isEmpty
+            ? 'No contacts found on your device.'
+            : 'No contacts match your search.',
       );
     }
 
@@ -387,9 +406,9 @@ class _ContactPickerScreenState extends State<ContactPickerScreen>
           phoneNumber: contact.phones?.first.value ?? '',
           isAlreadyFriend: false,
         );
-        
+
         final isSelected = _selectedContacts.any(
-          (c) => c.contact.identifier == contact.identifier
+          (c) => c.contact.identifier == contact.identifier,
         );
 
         return _buildContactTile(contactMatch, isSelected);
@@ -404,10 +423,13 @@ class _ContactPickerScreenState extends State<ContactPickerScreen>
         leading: CircleAvatar(
           backgroundColor: contactMatch.hasAccount ? Colors.green : Colors.grey,
           child: Text(
-            contactMatch.displayName.isNotEmpty 
-              ? contactMatch.displayName[0].toUpperCase()
-              : '?',
-            style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+            contactMatch.displayName.isNotEmpty
+                ? contactMatch.displayName[0].toUpperCase()
+                : '?',
+            style: const TextStyle(
+              color: Colors.white,
+              fontWeight: FontWeight.bold,
+            ),
           ),
         ),
         title: Text(
@@ -427,7 +449,9 @@ class _ContactPickerScreenState extends State<ContactPickerScreen>
               margin: const EdgeInsets.only(top: 4),
               padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
               decoration: BoxDecoration(
-                color: contactMatch.hasAccount ? Colors.green.shade100 : Colors.orange.shade100,
+                color: contactMatch.hasAccount
+                    ? Colors.green.shade100
+                    : Colors.orange.shade100,
                 borderRadius: BorderRadius.circular(12),
               ),
               child: Text(
@@ -435,18 +459,20 @@ class _ContactPickerScreenState extends State<ContactPickerScreen>
                 style: TextStyle(
                   fontSize: 10,
                   fontWeight: FontWeight.bold,
-                  color: contactMatch.hasAccount ? Colors.green.shade700 : Colors.orange.shade700,
+                  color: contactMatch.hasAccount
+                      ? Colors.green.shade700
+                      : Colors.orange.shade700,
                 ),
               ),
             ),
           ],
         ),
         trailing: isSelected
-          ? const Icon(Icons.check_circle, color: AppColors.primary)
-          : const Icon(Icons.circle_outlined, color: Colors.grey),
+            ? const Icon(Icons.check_circle, color: AppColors.primary)
+            : const Icon(Icons.circle_outlined, color: Colors.grey),
         onTap: contactMatch.isAlreadyFriend
-          ? null
-          : () => _toggleContactSelection(contactMatch),
+            ? null
+            : () => _toggleContactSelection(contactMatch),
         enabled: !contactMatch.isAlreadyFriend,
       ),
     );
@@ -459,10 +485,13 @@ class _ContactPickerScreenState extends State<ContactPickerScreen>
         leading: CircleAvatar(
           backgroundColor: AppColors.primary.withOpacity(0.1),
           child: Text(
-            contactMatch.displayName.isNotEmpty 
-              ? contactMatch.displayName[0].toUpperCase()
-              : '?',
-            style: const TextStyle(color: AppColors.primary, fontWeight: FontWeight.bold),
+            contactMatch.displayName.isNotEmpty
+                ? contactMatch.displayName[0].toUpperCase()
+                : '?',
+            style: const TextStyle(
+              color: AppColors.primary,
+              fontWeight: FontWeight.bold,
+            ),
           ),
         ),
         title: Text(
@@ -471,8 +500,8 @@ class _ContactPickerScreenState extends State<ContactPickerScreen>
         ),
         subtitle: Text(contactMatch.primaryPhone),
         trailing: isSelected
-          ? const Icon(Icons.check_circle, color: AppColors.primary)
-          : const Icon(Icons.circle_outlined, color: Colors.grey),
+            ? const Icon(Icons.check_circle, color: AppColors.primary)
+            : const Icon(Icons.circle_outlined, color: Colors.grey),
         onTap: () => _toggleContactSelection(contactMatch),
       ),
     );
@@ -489,11 +518,7 @@ class _ContactPickerScreenState extends State<ContactPickerScreen>
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(
-              icon,
-              size: 80,
-              color: Colors.grey.shade400,
-            ),
+            Icon(icon, size: 80, color: Colors.grey.shade400),
             const SizedBox(height: 24),
             Text(
               title,
@@ -507,10 +532,7 @@ class _ContactPickerScreenState extends State<ContactPickerScreen>
             Text(
               subtitle,
               textAlign: TextAlign.center,
-              style: TextStyle(
-                fontSize: 16,
-                color: Colors.grey.shade600,
-              ),
+              style: TextStyle(fontSize: 16, color: Colors.grey.shade600),
             ),
           ],
         ),

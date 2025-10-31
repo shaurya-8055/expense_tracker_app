@@ -12,6 +12,7 @@ import 'add_expense_screen.dart';
 import 'statistics_screen.dart';
 import 'udhari_screen.dart';
 import 'group_expense_screen.dart';
+import 'friends_management_screen.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -169,6 +170,27 @@ class _HomeScreenState extends State<HomeScreen> {
               ],
             ),
           ),
+          Container(
+            decoration: BoxDecoration(
+              color: AppColors.primary.withOpacity(0.1),
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: IconButton(
+              icon: const Icon(Icons.people),
+              onPressed: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => const FriendsManagementScreen(),
+                  ),
+                );
+              },
+              tooltip: 'Manage Friends',
+              color: AppColors.primary,
+              iconSize: 24,
+            ),
+          ),
+          const SizedBox(width: 12),
           Container(
             decoration: BoxDecoration(
               color: AppColors.primary.withOpacity(0.1),

@@ -7,7 +7,8 @@ import '../services/group_expense_storage_service.dart';
 class SyncedGroupExpenseProvider with ChangeNotifier {
   List<Friend> _friends = [];
   List<GroupExpense> _groupExpenses = [];
-  final GroupExpenseStorageService _localStorageService = GroupExpenseStorageService();
+  final GroupExpenseStorageService _localStorageService =
+      GroupExpenseStorageService();
   bool _isLoading = false;
   bool _isOnline = false;
   final String _currentUserId = 'me';
@@ -26,17 +27,21 @@ class SyncedGroupExpenseProvider with ChangeNotifier {
     try {
       // Initialize database service
       await DatabaseService.initializeUser();
-      
+
       // Check internet connectivity
       final connectivityResults = await Connectivity().checkConnectivity();
-      _isOnline = connectivityResults.isNotEmpty && !connectivityResults.every((result) => result == ConnectivityResult.none);
+      _isOnline =
+          connectivityResults.isNotEmpty &&
+          !connectivityResults.every(
+            (result) => result == ConnectivityResult.none,
+          );
 
       if (_isOnline) {
         // Connect to real-time updates
         await DatabaseService.connectWebSocket(
           onDataUpdate: _handleRealTimeUpdate,
         );
-        
+
         // Load data from server
         await _loadFromServer();
       } else {
@@ -46,7 +51,6 @@ class SyncedGroupExpenseProvider with ChangeNotifier {
 
       // Listen for connectivity changes
       Connectivity().onConnectivityChanged.listen(_onConnectivityChanged);
-      
     } catch (e) {
       print('Error initializing SyncedGroupExpenseProvider: $e');
       // Fallback to local storage
@@ -60,8 +64,10 @@ class SyncedGroupExpenseProvider with ChangeNotifier {
   // Handle connectivity changes
   void _onConnectivityChanged(List<ConnectivityResult> results) async {
     final wasOnline = _isOnline;
-    _isOnline = results.isNotEmpty && !results.every((result) => result == ConnectivityResult.none);
-    
+    _isOnline =
+        results.isNotEmpty &&
+        !results.every((result) => result == ConnectivityResult.none);
+
     if (!wasOnline && _isOnline) {
       // Just came online - sync data
       await _syncWithServer();
@@ -73,7 +79,7 @@ class SyncedGroupExpenseProvider with ChangeNotifier {
       // Just went offline - disconnect WebSocket
       DatabaseService.disconnectWebSocket();
     }
-    
+
     notifyListeners();
   }
 
@@ -82,7 +88,7 @@ class SyncedGroupExpenseProvider with ChangeNotifier {
     final type = update['type'];
     final data = update['data'];
     final userId = update['userId'];
-    
+
     // Don't process updates from self
     if (userId == DatabaseService.currentUserId) return;
 
@@ -95,7 +101,7 @@ class SyncedGroupExpenseProvider with ChangeNotifier {
           notifyListeners();
         }
         break;
-        
+
       case 'friend_updated':
         final friend = Friend.fromJson(data);
         final index = _friends.indexWhere((f) => f.id == friend.id);
@@ -105,14 +111,14 @@ class SyncedGroupExpenseProvider with ChangeNotifier {
           notifyListeners();
         }
         break;
-        
+
       case 'friend_deleted':
         final friendId = data['id'];
         _friends.removeWhere((f) => f.id == friendId);
         _saveToLocal();
         notifyListeners();
         break;
-        
+
       case 'group_expense_added':
         final expense = GroupExpense.fromJson(data);
         if (!_groupExpenses.any((e) => e.id == expense.id)) {
@@ -121,7 +127,7 @@ class SyncedGroupExpenseProvider with ChangeNotifier {
           notifyListeners();
         }
         break;
-        
+
       case 'group_expense_updated':
         final expense = GroupExpense.fromJson(data);
         final index = _groupExpenses.indexWhere((e) => e.id == expense.id);
@@ -131,7 +137,7 @@ class SyncedGroupExpenseProvider with ChangeNotifier {
           notifyListeners();
         }
         break;
-        
+
       case 'group_expense_deleted':
         final expenseId = data['id'];
         _groupExpenses.removeWhere((e) => e.id == expenseId);
@@ -146,10 +152,10 @@ class SyncedGroupExpenseProvider with ChangeNotifier {
     try {
       final friendsFromServer = await DatabaseService.getFriends();
       final expensesFromServer = await DatabaseService.getGroupExpenses();
-      
+
       _friends = friendsFromServer;
       _groupExpenses = expensesFromServer;
-      
+
       // Save to local storage for offline access
       await _saveToLocal();
     } catch (e) {
@@ -174,7 +180,7 @@ class SyncedGroupExpenseProvider with ChangeNotifier {
   // Sync with server when coming back online
   Future<void> _syncWithServer() async {
     if (!_isOnline) return;
-    
+
     try {
       // This is a simplified sync - in a real app you'd need conflict resolution
       await _loadFromServer();
@@ -190,7 +196,7 @@ class SyncedGroupExpenseProvider with ChangeNotifier {
     _friends.add(friend);
     await _saveToLocal();
     notifyListeners();
-    
+
     // Sync to server if online
     if (_isOnline) {
       try {
@@ -208,7 +214,7 @@ class SyncedGroupExpenseProvider with ChangeNotifier {
       _friends[index] = updatedFriend;
       await _saveToLocal();
       notifyListeners();
-      
+
       // Sync to server if online
       if (_isOnline) {
         try {
@@ -224,7 +230,7 @@ class SyncedGroupExpenseProvider with ChangeNotifier {
     _friends.removeWhere((f) => f.id == id);
     await _saveToLocal();
     notifyListeners();
-    
+
     // Sync to server if online
     if (_isOnline) {
       try {
@@ -249,7 +255,7 @@ class SyncedGroupExpenseProvider with ChangeNotifier {
     _groupExpenses.add(expense);
     await _saveToLocal();
     notifyListeners();
-    
+
     // Sync to server if online
     if (_isOnline) {
       try {
@@ -260,13 +266,16 @@ class SyncedGroupExpenseProvider with ChangeNotifier {
     }
   }
 
-  Future<void> updateGroupExpense(String id, GroupExpense updatedExpense) async {
+  Future<void> updateGroupExpense(
+    String id,
+    GroupExpense updatedExpense,
+  ) async {
     final index = _groupExpenses.indexWhere((e) => e.id == id);
     if (index != -1) {
       _groupExpenses[index] = updatedExpense;
       await _saveToLocal();
       notifyListeners();
-      
+
       // Sync to server if online
       if (_isOnline) {
         try {
@@ -282,7 +291,7 @@ class SyncedGroupExpenseProvider with ChangeNotifier {
     _groupExpenses.removeWhere((e) => e.id == id);
     await _saveToLocal();
     notifyListeners();
-    
+
     // Sync to server if online
     if (_isOnline) {
       try {
@@ -395,10 +404,18 @@ class SyncedGroupExpenseProvider with ChangeNotifier {
 
   // =============== INVITE SYSTEM ===============
 
-  Future<String> inviteFriend(String friendName, String? friendPhone, String? friendEmail) async {
+  Future<String> inviteFriend(
+    String friendName,
+    String? friendPhone,
+    String? friendEmail,
+  ) async {
     if (_isOnline) {
       try {
-        return await DatabaseService.inviteFriend(friendName, friendPhone, friendEmail);
+        return await DatabaseService.inviteFriend(
+          friendName,
+          friendPhone,
+          friendEmail,
+        );
       } catch (e) {
         print('Error creating invite: $e');
         // Generate a local invite link as fallback

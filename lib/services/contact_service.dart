@@ -10,22 +10,22 @@ class ContactService {
   /// Request contacts permission from user
   static Future<bool> requestContactsPermission() async {
     final status = await Permission.contacts.status;
-    
+
     if (status.isGranted) {
       return true;
     }
-    
+
     if (status.isDenied) {
       final result = await Permission.contacts.request();
       return result.isGranted;
     }
-    
+
     if (status.isPermanentlyDenied) {
       // Guide user to settings to enable permission
       await openAppSettings();
       return false;
     }
-    
+
     return false;
   }
 
@@ -45,12 +45,14 @@ class ContactService {
         withThumbnails: false,
         photoHighResolution: false,
       );
-      
+
       // Filter contacts that have phone numbers
-      _cachedContacts = contacts.where((contact) => 
-        contact.phones != null && contact.phones!.isNotEmpty
-      ).toList();
-      
+      _cachedContacts = contacts
+          .where(
+            (contact) => contact.phones != null && contact.phones!.isNotEmpty,
+          )
+          .toList();
+
       _contactsLoaded = true;
       return _cachedContacts;
     } catch (e) {
@@ -73,15 +75,17 @@ class ContactService {
         try {
           // Check if this phone number has an account
           final userExists = await DatabaseService.checkUserExists(cleanPhone);
-          
+
           if (userExists) {
             final userInfo = await DatabaseService.getUserByPhone(cleanPhone);
-            matches.add(ContactMatch(
-              contact: contact,
-              phoneNumber: cleanPhone,
-              userInfo: userInfo,
-              isAlreadyFriend: await _isAlreadyFriend(userInfo?['id']),
-            ));
+            matches.add(
+              ContactMatch(
+                contact: contact,
+                phoneNumber: cleanPhone,
+                userInfo: userInfo,
+                isAlreadyFriend: await _isAlreadyFriend(userInfo?['id']),
+              ),
+            );
             break; // Found a match for this contact, no need to check other numbers
           }
         } catch (e) {
@@ -96,16 +100,16 @@ class ContactService {
   /// Search contacts by name or phone number
   static Future<List<Contact>> searchContacts(String query) async {
     final contacts = await fetchContacts();
-    
+
     if (query.isEmpty) return contacts;
-    
+
     final lowerQuery = query.toLowerCase();
-    
+
     return contacts.where((contact) {
       // Search by display name
       final name = contact.displayName?.toLowerCase() ?? '';
       if (name.contains(lowerQuery)) return true;
-      
+
       // Search by phone numbers
       if (contact.phones != null) {
         for (final phone in contact.phones!) {
@@ -113,7 +117,7 @@ class ContactService {
           if (phoneNumber.contains(query)) return true;
         }
       }
-      
+
       return false;
     }).toList();
   }
@@ -121,41 +125,47 @@ class ContactService {
   /// Invite contacts to join the app
   static Future<List<String>> inviteContacts(List<Contact> contacts) async {
     final List<String> inviteLinks = [];
-    
+
     for (final contact in contacts) {
       if (contact.phones == null || contact.phones!.isEmpty) continue;
-      
+
       final primaryPhone = _cleanPhoneNumber(contact.phones!.first.value ?? '');
       if (primaryPhone.isEmpty) continue;
-      
+
       try {
         final inviteLink = await DatabaseService.inviteFriend(
           contact.displayName ?? 'Friend',
           primaryPhone,
-          contact.emails?.isNotEmpty == true ? contact.emails!.first.value : null,
+          contact.emails?.isNotEmpty == true
+              ? contact.emails!.first.value
+              : null,
         );
         inviteLinks.add(inviteLink);
       } catch (e) {
         print('Error creating invite for ${contact.displayName}: $e');
       }
     }
-    
+
     return inviteLinks;
   }
 
   /// Add found friends to user's friend list
-  static Future<void> addContactsAsFriends(List<ContactMatch> contactMatches) async {
+  static Future<void> addContactsAsFriends(
+    List<ContactMatch> contactMatches,
+  ) async {
     for (final match in contactMatches) {
       if (match.isAlreadyFriend) continue;
-      
+
       try {
         final friend = Friend(
-          id: match.userInfo?['id'] ?? 'contact_${DateTime.now().millisecondsSinceEpoch}',
+          id:
+              match.userInfo?['id'] ??
+              'contact_${DateTime.now().millisecondsSinceEpoch}',
           name: match.contact.displayName ?? 'Unknown',
           phoneNumber: match.phoneNumber,
           email: match.userInfo?['email'],
         );
-        
+
         await DatabaseService.addFriend(friend);
       } catch (e) {
         print('Error adding friend ${match.contact.displayName}: $e');
@@ -167,7 +177,7 @@ class ContactService {
   static String _cleanPhoneNumber(String phone) {
     // Remove all non-digit characters except +
     String cleaned = phone.replaceAll(RegExp(r'[^\d+]'), '');
-    
+
     // Handle different formats
     if (cleaned.startsWith('0')) {
       // Remove leading 0 and add country code (assuming India +91)
@@ -179,14 +189,14 @@ class ContactService {
       // Add country code
       cleaned = '+91$cleaned';
     }
-    
+
     return cleaned;
   }
 
   /// Check if user is already in friends list
   static Future<bool> _isAlreadyFriend(String? userId) async {
     if (userId == null) return false;
-    
+
     try {
       final friends = await DatabaseService.getFriends();
       return friends.any((friend) => friend.id == userId);
@@ -198,12 +208,12 @@ class ContactService {
   /// Get contact suggestions based on recent interactions
   static Future<List<Contact>> getContactSuggestions() async {
     final contacts = await fetchContacts();
-    
+
     // Sort by display name and return top 20
-    contacts.sort((a, b) => 
-      (a.displayName ?? '').compareTo(b.displayName ?? '')
+    contacts.sort(
+      (a, b) => (a.displayName ?? '').compareTo(b.displayName ?? ''),
     );
-    
+
     return contacts.take(20).toList();
   }
 

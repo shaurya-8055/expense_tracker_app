@@ -24,7 +24,9 @@ class ConnectionStatusWidget extends StatelessWidget {
                   height: 12,
                   child: CircularProgressIndicator(
                     strokeWidth: 2,
-                    valueColor: AlwaysStoppedAnimation<Color>(Colors.orange.shade600),
+                    valueColor: AlwaysStoppedAnimation<Color>(
+                      Colors.orange.shade600,
+                    ),
                   ),
                 ),
                 const SizedBox(width: 8),
@@ -44,7 +46,9 @@ class ConnectionStatusWidget extends StatelessWidget {
         return Container(
           padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
           decoration: BoxDecoration(
-            color: provider.isOnline ? Colors.green.shade100 : Colors.red.shade100,
+            color: provider.isOnline
+                ? Colors.green.shade100
+                : Colors.red.shade100,
             borderRadius: BorderRadius.circular(16),
           ),
           child: Row(
@@ -53,13 +57,17 @@ class ConnectionStatusWidget extends StatelessWidget {
               Icon(
                 provider.isOnline ? Icons.cloud_done : Icons.cloud_off,
                 size: 14,
-                color: provider.isOnline ? Colors.green.shade600 : Colors.red.shade600,
+                color: provider.isOnline
+                    ? Colors.green.shade600
+                    : Colors.red.shade600,
               ),
               const SizedBox(width: 6),
               Text(
                 provider.isOnline ? 'Online' : 'Offline',
                 style: TextStyle(
-                  color: provider.isOnline ? Colors.green.shade600 : Colors.red.shade600,
+                  color: provider.isOnline
+                      ? Colors.green.shade600
+                      : Colors.red.shade600,
                   fontSize: 12,
                   fontWeight: FontWeight.w500,
                 ),
@@ -89,11 +97,7 @@ class SyncStatusBanner extends StatelessWidget {
           color: Colors.orange.shade100,
           child: Row(
             children: [
-              Icon(
-                Icons.wifi_off,
-                color: Colors.orange.shade700,
-                size: 20,
-              ),
+              Icon(Icons.wifi_off, color: Colors.orange.shade700, size: 20),
               const SizedBox(width: 12),
               Expanded(
                 child: Column(
@@ -156,7 +160,7 @@ class _RealTimeUpdateBannerState extends State<RealTimeUpdateBanner>
         _isVisible = true;
       });
       _animationController.forward();
-      
+
       // Hide after 3 seconds
       Future.delayed(const Duration(seconds: 3), () {
         if (mounted) {
@@ -189,7 +193,7 @@ class _RealTimeUpdateBannerState extends State<RealTimeUpdateBanner>
       builder: (context, provider, child) {
         // This would be triggered by the provider when real-time updates arrive
         // For now, we'll show it when the provider state changes
-        
+
         if (!_isVisible) {
           return const SizedBox.shrink();
         }
@@ -202,11 +206,7 @@ class _RealTimeUpdateBannerState extends State<RealTimeUpdateBanner>
             color: Colors.blue.shade100,
             child: Row(
               children: [
-                Icon(
-                  Icons.update,
-                  color: Colors.blue.shade700,
-                  size: 20,
-                ),
+                Icon(Icons.update, color: Colors.blue.shade700, size: 20),
                 const SizedBox(width: 12),
                 Expanded(
                   child: Text(
@@ -218,11 +218,7 @@ class _RealTimeUpdateBannerState extends State<RealTimeUpdateBanner>
                     ),
                   ),
                 ),
-                Icon(
-                  Icons.check_circle,
-                  color: Colors.blue.shade700,
-                  size: 20,
-                ),
+                Icon(Icons.check_circle, color: Colors.blue.shade700, size: 20),
               ],
             ),
           ),
@@ -248,11 +244,7 @@ class OnlineUsersWidget extends StatelessWidget {
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
           child: Row(
             children: [
-              Icon(
-                Icons.people,
-                size: 16,
-                color: Colors.green.shade600,
-              ),
+              Icon(Icons.people, size: 16, color: Colors.green.shade600),
               const SizedBox(width: 8),
               Text(
                 '${provider.friends.length} friends connected',
@@ -264,15 +256,19 @@ class OnlineUsersWidget extends StatelessWidget {
               ),
               const SizedBox(width: 8),
               // Show online indicator dots for friends
-              ...provider.friends.take(3).map((friend) => Container(
-                margin: const EdgeInsets.only(right: 4),
-                width: 8,
-                height: 8,
-                decoration: BoxDecoration(
-                  color: Colors.green.shade500,
-                  shape: BoxShape.circle,
-                ),
-              )),
+              ...provider.friends
+                  .take(3)
+                  .map(
+                    (friend) => Container(
+                      margin: const EdgeInsets.only(right: 4),
+                      width: 8,
+                      height: 8,
+                      decoration: BoxDecoration(
+                        color: Colors.green.shade500,
+                        shape: BoxShape.circle,
+                      ),
+                    ),
+                  ),
               if (provider.friends.length > 3)
                 Text(
                   '+${provider.friends.length - 3}',

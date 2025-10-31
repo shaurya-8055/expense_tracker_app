@@ -12,7 +12,7 @@ class DatabaseService {
   static const String _baseUrl = 'http://localhost:8080/api';
   static const String _wsUrl = 'ws://localhost:8080';
   static const FlutterSecureStorage _storage = FlutterSecureStorage();
-  
+
   static String? _userId;
   static String? _authToken;
   static WebSocketChannel? _wsChannel;
@@ -22,19 +22,19 @@ class DatabaseService {
   static Future<bool> initializeUser() async {
     _userId = await _storage.read(key: 'user_id');
     _authToken = await _storage.read(key: 'auth_token');
-    
+
     if (_userId == null) {
       // Generate new user ID if first time
       _userId = 'user_${DateTime.now().millisecondsSinceEpoch}';
       await _storage.write(key: 'user_id', value: _userId);
     }
-    
+
     if (_authToken == null) {
       // Generate auth token
       _authToken = 'token_${DateTime.now().millisecondsSinceEpoch}';
       await _storage.write(key: 'auth_token', value: _authToken);
     }
-    
+
     return true;
   }
 
@@ -43,13 +43,11 @@ class DatabaseService {
     required Function(Map<String, dynamic>) onDataUpdate,
   }) async {
     if (_userId == null) await initializeUser();
-    
+
     try {
       _onDataUpdate = onDataUpdate;
-      _wsChannel = WebSocketChannel.connect(
-        Uri.parse(_wsUrl),
-      );
-      
+      _wsChannel = WebSocketChannel.connect(Uri.parse(_wsUrl));
+
       _wsChannel!.stream.listen(
         (data) {
           try {
@@ -363,7 +361,11 @@ class DatabaseService {
   // =============== USER MANAGEMENT ===============
 
   // Invite friend to app (send them a link to download and connect)
-  static Future<String> inviteFriend(String friendName, String? friendPhone, String? friendEmail) async {
+  static Future<String> inviteFriend(
+    String friendName,
+    String? friendPhone,
+    String? friendEmail,
+  ) async {
     try {
       final response = await _sendRequest('POST', '/invite', {
         'friendName': friendName,
@@ -446,7 +448,7 @@ class DatabaseService {
       final response = await _sendRequest('POST', '/users/check', {
         'phone': phoneNumber,
       });
-      
+
       if (response.statusCode == 200) {
         final data = json.decode(response.body);
         return data['exists'] ?? false;
@@ -459,12 +461,14 @@ class DatabaseService {
   }
 
   /// Get user information by phone number
-  static Future<Map<String, dynamic>?> getUserByPhone(String phoneNumber) async {
+  static Future<Map<String, dynamic>?> getUserByPhone(
+    String phoneNumber,
+  ) async {
     try {
       final response = await _sendRequest('POST', '/users/by-phone', {
         'phone': phoneNumber,
       });
-      
+
       if (response.statusCode == 200) {
         final data = json.decode(response.body);
         return data['user'];
@@ -488,7 +492,7 @@ class DatabaseService {
         'phone': phone,
         'email': email,
       });
-      
+
       if (response.statusCode == 200 || response.statusCode == 201) {
         final data = json.decode(response.body);
         return data['user'];
@@ -506,7 +510,7 @@ class DatabaseService {
       final response = await _sendRequest('POST', '/users/search', {
         'query': query,
       });
-      
+
       if (response.statusCode == 200) {
         final data = json.decode(response.body);
         return List<Map<String, dynamic>>.from(data['users'] ?? []);
