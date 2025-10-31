@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'providers/expense_provider.dart';
+import 'providers/udhari_provider.dart';
+import 'providers/group_expense_provider.dart';
 import 'screens/home_screen.dart';
 import 'utils/constants.dart';
 
@@ -13,8 +15,12 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return ChangeNotifierProvider(
-      create: (context) => ExpenseProvider(),
+    return MultiProvider(
+      providers: [
+        ChangeNotifierProvider(create: (context) => ExpenseProvider()),
+        ChangeNotifierProvider(create: (context) => UdhariProvider()),
+        ChangeNotifierProvider(create: (context) => GroupExpenseProvider()),
+      ],
       child: MaterialApp(
         title: AppStrings.appName,
         debugShowCheckedModeBanner: false,

@@ -6,6 +6,7 @@ import '../utils/constants.dart';
 import '../widgets/expense_card.dart';
 import 'add_expense_screen.dart';
 import 'statistics_screen.dart';
+import 'udhari_screen.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -87,6 +88,7 @@ class _HomeScreenState extends State<HomeScreen> {
         children: [
           _buildHeader(),
           _buildSummaryCard(),
+          _buildQuickActions(),
           _buildFilterBar(),
           Expanded(child: _buildExpensesList()),
         ],
@@ -131,6 +133,80 @@ class _HomeScreenState extends State<HomeScreen> {
             ),
           ),
         ],
+      ),
+    );
+  }
+
+  Widget _buildQuickActions() {
+    return Container(
+      margin: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+      child: Row(
+        children: [
+          Expanded(
+            child: _buildQuickActionButton(
+              'Udhari',
+              Icons.account_balance_wallet,
+              AppColors.warning,
+              () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => const UdhariScreen(),
+                  ),
+                );
+              },
+            ),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: _buildQuickActionButton(
+              'Split Expense',
+              Icons.people,
+              AppColors.secondary,
+              () {
+                // Navigate to group expenses (will create next)
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text('Group expenses coming soon!')),
+                );
+              },
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildQuickActionButton(
+    String label,
+    IconData icon,
+    Color color,
+    VoidCallback onTap,
+  ) {
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(12),
+      child: Container(
+        padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
+        decoration: BoxDecoration(
+          color: color.withOpacity(0.1),
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(color: color.withOpacity(0.3)),
+        ),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(icon, color: color, size: 20),
+            const SizedBox(width: 8),
+            Text(
+              label,
+              style: TextStyle(
+                fontSize: 14,
+                fontWeight: FontWeight.w600,
+                color: color,
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
