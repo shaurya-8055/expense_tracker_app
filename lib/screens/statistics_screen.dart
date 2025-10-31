@@ -42,22 +42,56 @@ class _StatisticsScreenState extends State<StatisticsScreen> {
 
   Widget _buildHeader() {
     return Container(
-      padding: const EdgeInsets.all(20),
-      child: const Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+      padding: const EdgeInsets.fromLTRB(20, 16, 20, 16),
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          colors: [
+            AppColors.primary.withOpacity(0.1),
+            AppColors.secondary.withOpacity(0.05),
+          ],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+      ),
+      child: Row(
         children: [
-          Text(
-            'Statistics',
-            style: TextStyle(
-              fontSize: 28,
-              fontWeight: FontWeight.bold,
-              color: AppColors.textPrimary,
+          Container(
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              color: AppColors.primary.withOpacity(0.2),
+              borderRadius: BorderRadius.circular(16),
+            ),
+            child: const Icon(
+              Icons.bar_chart_rounded,
+              color: AppColors.primary,
+              size: 28,
             ),
           ),
-          SizedBox(height: 4),
-          Text(
-            'Track your spending patterns',
-            style: TextStyle(fontSize: 14, color: AppColors.textSecondary),
+          const SizedBox(width: 16),
+          const Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'Statistics',
+                  style: TextStyle(
+                    fontSize: 24,
+                    fontWeight: FontWeight.bold,
+                    color: AppColors.textPrimary,
+                    letterSpacing: -0.5,
+                  ),
+                ),
+                SizedBox(height: 4),
+                Text(
+                  'Track your spending patterns',
+                  style: TextStyle(
+                    fontSize: 14,
+                    color: AppColors.textSecondary,
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+              ],
+            ),
           ),
         ],
       ),

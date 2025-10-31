@@ -5,6 +5,8 @@ import 'package:uuid/uuid.dart';
 import '../models/udhari.dart';
 import '../providers/udhari_provider.dart';
 import '../utils/constants.dart';
+import '../screens/contact_picker_screen.dart';
+import '../services/contact_service.dart';
 
 class AddUdhariScreen extends StatefulWidget {
   final Udhari? udhari;
@@ -210,19 +212,33 @@ class _AddUdhariScreenState extends State<AddUdhariScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Text(
-              'Person Name',
-              style: TextStyle(
-                fontSize: 14,
-                fontWeight: FontWeight.w600,
-                color: AppColors.textSecondary,
-              ),
+            Row(
+              children: [
+                const Text(
+                  'Person Name',
+                  style: TextStyle(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w600,
+                    color: AppColors.textSecondary,
+                  ),
+                ),
+                const Spacer(),
+                TextButton.icon(
+                  onPressed: _showContactPicker,
+                  icon: const Icon(Icons.contact_phone, size: 18),
+                  label: const Text('From Contacts'),
+                  style: TextButton.styleFrom(
+                    foregroundColor: AppColors.primary,
+                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                  ),
+                ),
+              ],
             ),
             const SizedBox(height: 8),
             TextFormField(
               controller: _personNameController,
               decoration: const InputDecoration(
-                hintText: 'Enter person name',
+                hintText: 'Enter person name or select from contacts',
                 border: InputBorder.none,
                 contentPadding: EdgeInsets.zero,
               ),
@@ -680,5 +696,33 @@ class _AddUdhariScreenState extends State<AddUdhariScreen> {
         ],
       ),
     );
+  }
+
+  Future<void> _showContactPicker() async {
+    try {
+      final result = await Navigator.push<List<ContactMatch>>(
+        context,
+        MaterialPageRoute(
+          builder: (context) => const ContactPickerScreen(isForInvite: false),
+        ),
+      );
+
+      if (result != null && result.isNotEmpty) {
+        final selectedContact = result.first;
+        setState(() {
+          _personNameController.text = selectedContact.displayName;
+          _phoneController.text = selectedContact.primaryPhone;
+        });
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Error accessing contacts: $e'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    }
   }
 }

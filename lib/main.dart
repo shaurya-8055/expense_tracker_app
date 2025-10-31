@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import 'providers/expense_provider.dart';
 import 'providers/udhari_provider.dart';
 import 'providers/group_expense_provider.dart';
+import 'providers/synced_group_expense_provider.dart';
 import 'screens/home_screen.dart';
 import 'screens/group_expense_screen.dart';
 import 'utils/constants.dart';
@@ -21,6 +22,9 @@ class MyApp extends StatelessWidget {
         ChangeNotifierProvider(create: (context) => ExpenseProvider()),
         ChangeNotifierProvider(create: (context) => UdhariProvider()),
         ChangeNotifierProvider(create: (context) => GroupExpenseProvider()),
+        ChangeNotifierProvider(
+          create: (context) => SyncedGroupExpenseProvider()..initialize(),
+        ),
       ],
       child: MaterialApp(
         title: AppStrings.appName,
@@ -69,9 +73,7 @@ class MyApp extends StatelessWidget {
           ),
         ),
         home: const HomeScreen(),
-        routes: {
-          '/group-expenses': (context) => const GroupExpenseScreen(),
-        },
+        routes: {'/group-expenses': (context) => const GroupExpenseScreen()},
       ),
     );
   }

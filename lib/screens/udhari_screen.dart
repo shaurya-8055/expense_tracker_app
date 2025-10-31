@@ -35,36 +35,24 @@ class _UdhariScreenState extends State<UdhariScreen>
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: AppColors.background,
-      appBar: AppBar(
-        title: const Text('Udhari (Credit/Debt)'),
-        backgroundColor: AppColors.primary,
-        foregroundColor: Colors.white,
-        bottom: TabBar(
-          controller: _tabController,
-          indicatorColor: Colors.white,
-          labelColor: Colors.white,
-          unselectedLabelColor: Colors.white70,
-          tabs: const [
-            Tab(text: 'All'),
-            Tab(text: 'Given'),
-            Tab(text: 'Taken'),
+      body: SafeArea(
+        child: Column(
+          children: [
+            _buildHeader(),
+            _buildSummaryCard(),
+            _buildTabBar(),
+            Expanded(
+              child: TabBarView(
+                controller: _tabController,
+                children: [
+                  _buildUdhariList(null),
+                  _buildUdhariList(UdhariType.given),
+                  _buildUdhariList(UdhariType.taken),
+                ],
+              ),
+            ),
           ],
         ),
-      ),
-      body: Column(
-        children: [
-          _buildSummaryCard(),
-          Expanded(
-            child: TabBarView(
-              controller: _tabController,
-              children: [
-                _buildUdhariList(null),
-                _buildUdhariList(UdhariType.given),
-                _buildUdhariList(UdhariType.taken),
-              ],
-            ),
-          ),
-        ],
       ),
       floatingActionButton: FloatingActionButton.extended(
         onPressed: () {
@@ -81,28 +69,124 @@ class _UdhariScreenState extends State<UdhariScreen>
     );
   }
 
+  Widget _buildHeader() {
+    return Container(
+      padding: const EdgeInsets.fromLTRB(20, 16, 20, 16),
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          colors: [
+            AppColors.warning.withOpacity(0.1),
+            AppColors.warning.withOpacity(0.05),
+          ],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+      ),
+      child: Row(
+        children: [
+          Container(
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              color: AppColors.warning.withOpacity(0.2),
+              borderRadius: BorderRadius.circular(16),
+            ),
+            child: const Icon(
+              Icons.account_balance_wallet,
+              color: AppColors.warning,
+              size: 28,
+            ),
+          ),
+          const SizedBox(width: 16),
+          const Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'Udhari Management',
+                  style: TextStyle(
+                    fontSize: 24,
+                    fontWeight: FontWeight.bold,
+                    color: AppColors.textPrimary,
+                    letterSpacing: -0.5,
+                  ),
+                ),
+                SizedBox(height: 4),
+                Text(
+                  'Track your credit & debt',
+                  style: TextStyle(
+                    fontSize: 14,
+                    color: AppColors.textSecondary,
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildTabBar() {
+    return Container(
+      margin: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.grey.withOpacity(0.1),
+            blurRadius: 10,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
+      child: TabBar(
+        controller: _tabController,
+        indicator: BoxDecoration(
+          color: AppColors.warning,
+          borderRadius: BorderRadius.circular(14),
+        ),
+        indicatorSize: TabBarIndicatorSize.tab,
+        labelColor: Colors.white,
+        unselectedLabelColor: AppColors.textSecondary,
+        labelStyle: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600),
+        unselectedLabelStyle: const TextStyle(
+          fontSize: 14,
+          fontWeight: FontWeight.w500,
+        ),
+        padding: const EdgeInsets.all(4),
+        tabs: const [
+          Tab(text: 'All'),
+          Tab(text: 'Given'),
+          Tab(text: 'Taken'),
+        ],
+      ),
+    );
+  }
+
   Widget _buildSummaryCard() {
     return Consumer<UdhariProvider>(
       builder: (context, provider, child) {
         return Container(
-          margin: const EdgeInsets.all(16),
-          padding: const EdgeInsets.all(20),
+          margin: const EdgeInsets.symmetric(horizontal: 20),
+          padding: const EdgeInsets.all(24),
           decoration: BoxDecoration(
             gradient: LinearGradient(
               colors: provider.netBalance >= 0
-                  ? [AppColors.success, AppColors.success.withOpacity(0.7)]
-                  : [AppColors.error, AppColors.error.withOpacity(0.7)],
+                  ? [AppColors.success, AppColors.success.withOpacity(0.8)]
+                  : [AppColors.error, AppColors.error.withOpacity(0.8)],
               begin: Alignment.topLeft,
               end: Alignment.bottomRight,
             ),
-            borderRadius: BorderRadius.circular(20),
+            borderRadius: BorderRadius.circular(24),
             boxShadow: [
               BoxShadow(
                 color:
                     (provider.netBalance >= 0
                             ? AppColors.success
                             : AppColors.error)
-                        .withOpacity(0.3),
+                        .withOpacity(0.4),
                 blurRadius: 20,
                 offset: const Offset(0, 10),
               ),
@@ -120,7 +204,11 @@ class _UdhariScreenState extends State<UdhariScreen>
                       Icons.arrow_downward,
                     ),
                   ),
-                  Container(width: 1, height: 40, color: Colors.white30),
+                  Container(
+                    width: 2,
+                    height: 50,
+                    color: Colors.white.withOpacity(0.3),
+                  ),
                   Expanded(
                     child: _buildSummaryItem(
                       'You Owe',
@@ -130,38 +218,49 @@ class _UdhariScreenState extends State<UdhariScreen>
                   ),
                 ],
               ),
-              const SizedBox(height: 16),
+              const SizedBox(height: 20),
               Container(
-                padding: const EdgeInsets.all(12),
+                padding: const EdgeInsets.symmetric(
+                  vertical: 16,
+                  horizontal: 20,
+                ),
                 decoration: BoxDecoration(
                   color: Colors.white.withOpacity(0.2),
-                  borderRadius: BorderRadius.circular(12),
+                  borderRadius: BorderRadius.circular(16),
                 ),
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    const Text(
-                      'Net Balance: ',
-                      style: TextStyle(
-                        color: Colors.white,
-                        fontSize: 16,
-                        fontWeight: FontWeight.w500,
-                      ),
+                    Icon(
+                      provider.netBalance >= 0
+                          ? Icons.trending_up
+                          : Icons.trending_down,
+                      color: Colors.white,
+                      size: 24,
                     ),
-                    Text(
-                      '₹${provider.netBalance.abs().toStringAsFixed(2)}',
-                      style: const TextStyle(
-                        color: Colors.white,
-                        fontSize: 20,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                    Text(
-                      provider.netBalance >= 0 ? ' in your favor' : ' you owe',
-                      style: const TextStyle(
-                        color: Colors.white70,
-                        fontSize: 14,
-                      ),
+                    const SizedBox(width: 12),
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'Net Balance',
+                          style: TextStyle(
+                            color: Colors.white.withOpacity(0.9),
+                            fontSize: 13,
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                        const SizedBox(height: 4),
+                        Text(
+                          '₹${provider.netBalance.abs().toStringAsFixed(2)}',
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontSize: 28,
+                            fontWeight: FontWeight.bold,
+                            letterSpacing: -0.5,
+                          ),
+                        ),
+                      ],
                     ),
                   ],
                 ),
