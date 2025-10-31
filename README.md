@@ -2,6 +2,8 @@
 
 A beautiful, feature-rich expense tracking application built with Flutter. Track your spending, visualize your expenses with charts, and gain insights into your financial habits.
 
+**Currency: Indian Rupee (₹)**
+
 ## ✨ Features
 
 ### 📊 Core Functionality
