@@ -11,7 +11,8 @@ class FriendsManagementScreen extends StatefulWidget {
   const FriendsManagementScreen({super.key});
 
   @override
-  State<FriendsManagementScreen> createState() => _FriendsManagementScreenState();
+  State<FriendsManagementScreen> createState() =>
+      _FriendsManagementScreenState();
 }
 
 class _FriendsManagementScreenState extends State<FriendsManagementScreen> {
@@ -47,7 +48,9 @@ class _FriendsManagementScreenState extends State<FriendsManagementScreen> {
 
         // Refresh the friends list after adding
         // The provider will handle the actual addition through the ContactPickerScreen
-        await Future.delayed(const Duration(milliseconds: 500)); // Small delay for UX
+        await Future.delayed(
+          const Duration(milliseconds: 500),
+        ); // Small delay for UX
 
         setState(() {
           _isLoading = false;
@@ -66,13 +69,10 @@ class _FriendsManagementScreenState extends State<FriendsManagementScreen> {
       setState(() {
         _isLoading = false;
       });
-      
+
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Error: $e'),
-            backgroundColor: Colors.red,
-          ),
+          SnackBar(content: Text('Error: $e'), backgroundColor: Colors.red),
         );
       }
     }
@@ -100,10 +100,7 @@ class _FriendsManagementScreenState extends State<FriendsManagementScreen> {
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Error: $e'),
-            backgroundColor: Colors.red,
-          ),
+          SnackBar(content: Text('Error: $e'), backgroundColor: Colors.red),
         );
       }
     }
@@ -167,12 +164,19 @@ class _FriendsManagementScreenState extends State<FriendsManagementScreen> {
 
     if (result == true && nameController.text.trim().isNotEmpty) {
       try {
-        final provider = Provider.of<SyncedGroupExpenseProvider>(context, listen: false);
+        final provider = Provider.of<SyncedGroupExpenseProvider>(
+          context,
+          listen: false,
+        );
         final friend = Friend(
           id: 'manual_${DateTime.now().millisecondsSinceEpoch}',
           name: nameController.text.trim(),
-          phoneNumber: phoneController.text.trim().isNotEmpty ? phoneController.text.trim() : null,
-          email: emailController.text.trim().isNotEmpty ? emailController.text.trim() : null,
+          phoneNumber: phoneController.text.trim().isNotEmpty
+              ? phoneController.text.trim()
+              : null,
+          email: emailController.text.trim().isNotEmpty
+              ? emailController.text.trim()
+              : null,
         );
 
         await provider.addFriend(friend);
@@ -304,8 +308,8 @@ class _FriendsManagementScreenState extends State<FriendsManagementScreen> {
         if (_searchQuery.isNotEmpty) {
           filteredFriends = provider.friends.where((friend) {
             return friend.name.toLowerCase().contains(_searchQuery) ||
-                   (friend.phoneNumber?.contains(_searchQuery) ?? false) ||
-                   (friend.email?.toLowerCase().contains(_searchQuery) ?? false);
+                (friend.phoneNumber?.contains(_searchQuery) ?? false) ||
+                (friend.email?.toLowerCase().contains(_searchQuery) ?? false);
           }).toList();
         }
 
@@ -327,24 +331,24 @@ class _FriendsManagementScreenState extends State<FriendsManagementScreen> {
   Widget _buildFriendTile(Friend friend, SyncedGroupExpenseProvider provider) {
     final balances = provider.getBalances();
     final balance = balances[friend.id] ?? 0.0;
-    
+
     return Card(
       margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
       child: ListTile(
         leading: CircleAvatar(
-          backgroundColor: balance > 0 
-            ? Colors.green.shade100 
-            : balance < 0 
-              ? Colors.red.shade100 
+          backgroundColor: balance > 0
+              ? Colors.green.shade100
+              : balance < 0
+              ? Colors.red.shade100
               : AppColors.primary.withOpacity(0.1),
           child: Text(
             friend.name.isNotEmpty ? friend.name[0].toUpperCase() : '?',
             style: TextStyle(
               fontWeight: FontWeight.bold,
-              color: balance > 0 
-                ? Colors.green.shade700 
-                : balance < 0 
-                  ? Colors.red.shade700 
+              color: balance > 0
+                  ? Colors.green.shade700
+                  : balance < 0
+                  ? Colors.red.shade700
                   : AppColors.primary,
             ),
           ),
@@ -371,17 +375,21 @@ class _FriendsManagementScreenState extends State<FriendsManagementScreen> {
                 margin: const EdgeInsets.only(top: 4),
                 padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
                 decoration: BoxDecoration(
-                  color: balance > 0 ? Colors.green.shade100 : Colors.red.shade100,
+                  color: balance > 0
+                      ? Colors.green.shade100
+                      : Colors.red.shade100,
                   borderRadius: BorderRadius.circular(12),
                 ),
                 child: Text(
-                  balance > 0 
-                    ? 'Owes you ₹${balance.abs().toStringAsFixed(2)}'
-                    : 'You owe ₹${balance.abs().toStringAsFixed(2)}',
+                  balance > 0
+                      ? 'Owes you ₹${balance.abs().toStringAsFixed(2)}'
+                      : 'You owe ₹${balance.abs().toStringAsFixed(2)}',
                   style: TextStyle(
                     fontSize: 10,
                     fontWeight: FontWeight.bold,
-                    color: balance > 0 ? Colors.green.shade700 : Colors.red.shade700,
+                    color: balance > 0
+                        ? Colors.green.shade700
+                        : Colors.red.shade700,
                   ),
                 ),
               ),
@@ -407,14 +415,8 @@ class _FriendsManagementScreenState extends State<FriendsManagementScreen> {
               child: Text('View Expenses'),
             ),
             if (balance != 0)
-              const PopupMenuItem(
-                value: 'settle',
-                child: Text('Settle Bill'),
-              ),
-            const PopupMenuItem(
-              value: 'delete',
-              child: Text('Remove Friend'),
-            ),
+              const PopupMenuItem(value: 'settle', child: Text('Settle Bill')),
+            const PopupMenuItem(value: 'delete', child: Text('Remove Friend')),
           ],
         ),
       ),
@@ -428,11 +430,7 @@ class _FriendsManagementScreenState extends State<FriendsManagementScreen> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(
-              Icons.people_outline,
-              size: 80,
-              color: Colors.grey.shade400,
-            ),
+            Icon(Icons.people_outline, size: 80, color: Colors.grey.shade400),
             const SizedBox(height: 24),
             Text(
               _searchQuery.isEmpty ? 'No Friends Yet' : 'No Results Found',
@@ -445,13 +443,10 @@ class _FriendsManagementScreenState extends State<FriendsManagementScreen> {
             const SizedBox(height: 16),
             Text(
               _searchQuery.isEmpty
-                ? 'Add friends to start splitting expenses!\nTap the + button to get started.'
-                : 'No friends match your search.',
+                  ? 'Add friends to start splitting expenses!\nTap the + button to get started.'
+                  : 'No friends match your search.',
               textAlign: TextAlign.center,
-              style: TextStyle(
-                fontSize: 16,
-                color: Colors.grey.shade600,
-              ),
+              style: TextStyle(fontSize: 16, color: Colors.grey.shade600),
             ),
             if (_searchQuery.isEmpty) ...[
               const SizedBox(height: 32),
@@ -462,7 +457,10 @@ class _FriendsManagementScreenState extends State<FriendsManagementScreen> {
                 style: ElevatedButton.styleFrom(
                   backgroundColor: AppColors.primary,
                   foregroundColor: Colors.white,
-                  padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 24,
+                    vertical: 12,
+                  ),
                 ),
               ),
             ],
@@ -472,9 +470,12 @@ class _FriendsManagementScreenState extends State<FriendsManagementScreen> {
     );
   }
 
-  void _viewExpensesWithFriend(Friend friend, SyncedGroupExpenseProvider provider) {
+  void _viewExpensesWithFriend(
+    Friend friend,
+    SyncedGroupExpenseProvider provider,
+  ) {
     final expenses = provider.getExpensesWithFriend(friend.id);
-    
+
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
@@ -505,21 +506,21 @@ class _FriendsManagementScreenState extends State<FriendsManagementScreen> {
               const SizedBox(height: 16),
               Expanded(
                 child: expenses.isEmpty
-                  ? const Center(child: Text('No shared expenses'))
-                  : ListView.builder(
-                      controller: scrollController,
-                      itemCount: expenses.length,
-                      itemBuilder: (context, index) {
-                        final expense = expenses[index];
-                        return Card(
-                          child: ListTile(
-                            title: Text(expense.title),
-                            subtitle: Text(expense.formattedDate),
-                            trailing: Text(expense.formattedAmount),
-                          ),
-                        );
-                      },
-                    ),
+                    ? const Center(child: Text('No shared expenses'))
+                    : ListView.builder(
+                        controller: scrollController,
+                        itemCount: expenses.length,
+                        itemBuilder: (context, index) {
+                          final expense = expenses[index];
+                          return Card(
+                            child: ListTile(
+                              title: Text(expense.title),
+                              subtitle: Text(expense.formattedDate),
+                              trailing: Text(expense.formattedAmount),
+                            ),
+                          );
+                        },
+                      ),
               ),
             ],
           ),
@@ -550,7 +551,9 @@ class _FriendsManagementScreenState extends State<FriendsManagementScreen> {
       context: context,
       builder: (context) => AlertDialog(
         title: Text('Remove ${friend.name}?'),
-        content: const Text('This will remove them from your friends list. Shared expense history will be preserved.'),
+        content: const Text(
+          'This will remove them from your friends list. Shared expense history will be preserved.',
+        ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
