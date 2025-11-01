@@ -71,7 +71,7 @@ app.get('/health', (req, res) => {
 // In-memory user storage for development
 const users = new Map();
 const usersByPhone = new Map();
-const bcrypt = require('bcrypt');
+const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 
 const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key-change-in-production';
