@@ -447,6 +447,60 @@ class DatabaseService {
 
   // =============== USER MANAGEMENT ===============
 
+  // Add friend by phone number (creates pending invitation)
+  static Future<void> addFriendByPhone(
+    String friendPhone,
+    String friendName,
+  ) async {
+    try {
+      final userId = await _getCurrentUserId();
+      if (userId == null) throw Exception('User not authenticated');
+
+      await _sendRequest('POST', '/api/friends/invite', {
+        'friendPhone': friendPhone,
+        'friendName': friendName,
+        'invitedBy': userId,
+        'timestamp': DateTime.now().toIso8601String(),
+      });
+    } catch (e) {
+      throw Exception('Failed to add friend by phone: $e');
+    }
+  }
+
+  // Get pending invitations for current user
+  static Future<List<Map<String, dynamic>>> getPendingInvitations() async {
+    try {
+      final response = await _sendRequest('GET', '/api/friends/pending', null);
+      final List<dynamic> data = json.decode(response.body);
+      return List<Map<String, dynamic>>.from(data);
+    } catch (e) {
+      throw Exception('Failed to get pending invitations: $e');
+    }
+  }
+
+  // Accept friend invitation
+  static Future<void> acceptFriendInvitation(String invitationId) async {
+    try {
+      await _sendRequest('POST', '/api/friends/accept', {
+        'invitationId': invitationId,
+        'timestamp': DateTime.now().toIso8601String(),
+      });
+    } catch (e) {
+      throw Exception('Failed to accept friend invitation: $e');
+    }
+  }
+
+  // Get shared expenses with friends
+  static Future<List<Map<String, dynamic>>> getSharedExpenses() async {
+    try {
+      final response = await _sendRequest('GET', '/api/expenses/shared', null);
+      final List<dynamic> data = json.decode(response.body);
+      return List<Map<String, dynamic>>.from(data);
+    } catch (e) {
+      throw Exception('Failed to get shared expenses: $e');
+    }
+  }
+
   // Invite friend to app (send them a link to download and connect)
   static Future<String> inviteFriend(
     String friendName,

@@ -523,6 +523,154 @@ app.delete('/api/friends/:id', authenticateToken, async (req, res) => {
     }
 });
 
+// Friend Invitation System
+app.post('/api/friends/invite', authenticateToken, async (req, res) => {
+    try {
+        const userId = req.user.id;
+        const { friendPhone, friendName } = req.body;
+        
+        // Create a pending friend invitation
+        const invitationId = `inv_${Date.now()}`;
+        
+        await pool.query(
+            `INSERT INTO friend_invitations (id, inviter_id, inviter_name, friend_phone, friend_name, status, created_at) 
+             VALUES ($1, $2, $3, $4, $5, 'pending', NOW())`,
+            [invitationId, userId, req.user.name, friendPhone, friendName]
+        );
+        
+        // Also add to friends table for immediate display (with pending status)
+        const friendId = `friend_${Date.now()}`;
+        await pool.query(
+            `INSERT INTO friends (id, user_id, name, phone_number, email, status, created_at) 
+             VALUES ($1, $2, $3, $4, NULL, 'pending', NOW())`,
+            [friendId, userId, friendName, friendPhone]
+        );
+        
+        console.log(`Created friend invitation for ${friendPhone} by user ${userId}`);
+        
+        res.json({ success: true, invitationId, friendId });
+    } catch (error) {
+        console.error('Create friend invitation error:', error);
+        res.status(500).json({ error: 'Failed to create friend invitation' });
+    }
+});
+
+app.get('/api/friends/pending', authenticateToken, async (req, res) => {
+    try {
+        const userPhone = req.user.phone;
+        
+        const result = await pool.query(
+            `SELECT fi.id, fi.inviter_id, fi.inviter_name, fi.friend_name, fi.created_at,
+                    u.name as inviter_name, u.email as inviter_email
+             FROM friend_invitations fi
+             JOIN users u ON fi.inviter_id = u.id
+             WHERE fi.friend_phone = $1 AND fi.status = 'pending'
+             ORDER BY fi.created_at DESC`,
+            [userPhone]
+        );
+        
+        const invitations = result.rows.map(row => ({
+            id: row.id,
+            inviterId: row.inviter_id,
+            inviterName: row.inviter_name,
+            inviterEmail: row.inviter_email,
+            friendName: row.friend_name,
+            createdAt: row.created_at
+        }));
+        
+        res.json(invitations);
+    } catch (error) {
+        console.error('Get pending invitations error:', error);
+        res.status(500).json({ error: 'Failed to get pending invitations' });
+    }
+});
+
+app.post('/api/friends/accept', authenticateToken, async (req, res) => {
+    try {
+        const userId = req.user.id;
+        const { invitationId } = req.body;
+        
+        // Get invitation details
+        const inviteResult = await pool.query(
+            `SELECT * FROM friend_invitations WHERE id = $1 AND status = 'pending'`,
+            [invitationId]
+        );
+        
+        if (inviteResult.rows.length === 0) {
+            return res.status(404).json({ error: 'Invitation not found' });
+        }
+        
+        const invitation = inviteResult.rows[0];
+        
+        // Add both users as friends to each other
+        const friendId1 = `friend_${Date.now()}_1`;
+        const friendId2 = `friend_${Date.now()}_2`;
+        
+        // Add inviter as friend to current user
+        await pool.query(
+            `INSERT INTO friends (id, user_id, name, phone_number, email, status, created_at) 
+             VALUES ($1, $2, $3, (SELECT phone FROM users WHERE id = $4), 
+                     (SELECT email FROM users WHERE id = $4), 'accepted', NOW())`,
+            [friendId1, userId, invitation.inviter_name, invitation.inviter_id]
+        );
+        
+        // Add current user as friend to inviter (update existing pending friend)
+        await pool.query(
+            `UPDATE friends 
+             SET name = $1, email = $2, status = 'accepted', updated_at = NOW()
+             WHERE user_id = $3 AND phone_number = $4`,
+            [req.user.name, req.user.email, invitation.inviter_id, req.user.phone]
+        );
+        
+        // Mark invitation as accepted
+        await pool.query(
+            `UPDATE friend_invitations SET status = 'accepted', updated_at = NOW() WHERE id = $1`,
+            [invitationId]
+        );
+        
+        console.log(`Accepted friend invitation ${invitationId}`);
+        
+        res.json({ success: true });
+    } catch (error) {
+        console.error('Accept friend invitation error:', error);
+        res.status(500).json({ error: 'Failed to accept friend invitation' });
+    }
+});
+
+app.get('/api/expenses/shared', authenticateToken, async (req, res) => {
+    try {
+        const userId = req.user.id;
+        
+        // Get shared expenses where user is either creator or participant
+        const result = await pool.query(
+            `SELECT se.*, u.name as creator_name
+             FROM shared_expenses se
+             JOIN users u ON se.creator_id = u.id
+             WHERE se.creator_id = $1 
+                OR $1 = ANY(se.participants)
+             ORDER BY se.date DESC, se.created_at DESC`,
+            [userId]
+        );
+        
+        const expenses = result.rows.map(row => ({
+            id: row.id,
+            title: row.title,
+            amount: parseFloat(row.amount),
+            date: row.date,
+            creatorId: row.creator_id,
+            creatorName: row.creator_name,
+            participants: row.participants,
+            splits: row.splits,
+            note: row.note
+        }));
+        
+        res.json(expenses);
+    } catch (error) {
+        console.error('Get shared expenses error:', error);
+        res.status(500).json({ error: 'Failed to get shared expenses' });
+    }
+});
+
 // Group Expenses API
 app.get('/api/group-expenses', async (req, res) => {
     try {
@@ -599,6 +747,138 @@ app.get('/api/personal-expenses', authenticateToken, async (req, res) => {
     } catch (error) {
         console.error('Get personal expenses error:', error);
         res.status(500).json({ error: 'Failed to get personal expenses' });
+    }
+});
+
+// General expense endpoint that handles both personal and shared expenses
+app.post('/api/expenses', authenticateToken, async (req, res) => {
+    try {
+        const userId = req.user.id;
+        const { description, amount, category, type, sharedWith } = req.body;
+        const expenseId = `exp_${Date.now()}_${Math.random().toString(36).substring(7)}`;
+        const currentDate = new Date().toISOString().split('T')[0];
+        
+        // Map category strings to integers
+        const categoryMap = {
+            'Food': 1,
+            'Transportation': 2,
+            'Entertainment': 3,
+            'Shopping': 4,
+            'Bills': 5,
+            'Healthcare': 6,
+            'Education': 7,
+            'Travel': 8,
+            'Other': 9
+        };
+        
+        const categoryId = categoryMap[category] || 9; // Default to 'Other'
+        
+        if (type === 'shared' && sharedWith && sharedWith.length > 0) {
+            // Create shared expense
+            console.log('Creating shared expense:', { description, amount, category, sharedWith });
+            
+            // First, create the main expense record
+            await pool.query(
+                `INSERT INTO personal_expenses (id, user_id, title, amount, date, category, description, created_at) 
+                 VALUES ($1, $2, $3, $4, $5, $6, $7, NOW())`,
+                [expenseId, userId, description, amount, currentDate, categoryId, `Shared expense with ${sharedWith.length} friend(s)`]
+            );
+            
+            // Then create shared expense records for each friend
+            for (const share of sharedWith) {
+                const sharedExpenseId = `shared_${Date.now()}_${Math.random().toString(36).substring(7)}`;
+                
+                // Get friend's user ID from friend's phone number
+                const friendResult = await pool.query(
+                    'SELECT phone_number FROM friends WHERE id = $1 AND user_id = $2',
+                    [share.friendId, userId]
+                );
+                
+                if (friendResult.rows.length > 0) {
+                    const friendPhone = friendResult.rows[0].phone_number;
+                    
+                    // Get friend's user ID from users table
+                    const userResult = await pool.query(
+                        'SELECT id FROM users WHERE phone = $1',
+                        [friendPhone]
+                    );
+                    
+                    if (userResult.rows.length > 0) {
+                        const friendUserId = userResult.rows[0].id;
+                    
+                        // For now, let's create a simple shared expense record
+                        // We need to match the existing shared_expenses table structure
+                        await pool.query(
+                            `INSERT INTO shared_expenses (id, creator_id, title, amount, date, participants, splits, note, created_at) 
+                             VALUES ($1, $2, $3, $4, $5, $6, $7, $8, NOW())`,
+                            [
+                                sharedExpenseId, 
+                                userId, 
+                                description, 
+                                amount, 
+                                currentDate,
+                                [userId, friendUserId], // PostgreSQL array format
+                                { [userId]: amount - share.amount, [friendUserId]: share.amount }, // JSONB object
+                                `Shared with friend - ${share.amount} amount`
+                            ]
+                        );
+                        
+                        console.log(`Created shared expense record for friend ${friendUserId}: ${share.amount}`);
+                    }
+                }
+            }
+            
+            res.json({ success: true, id: expenseId, type: 'shared' });
+        } else {
+            // Create personal expense
+            await pool.query(
+                `INSERT INTO personal_expenses (id, user_id, title, amount, date, category, description, created_at) 
+                 VALUES ($1, $2, $3, $4, $5, $6, $7, NOW())`,
+                [expenseId, userId, description, amount, currentDate, categoryId, 'Personal expense']
+            );
+            
+            res.json({ success: true, id: expenseId, type: 'personal' });
+        }
+        
+    } catch (error) {
+        console.error('Add expense error:', error);
+        console.error('Full error details:', error.message, error.stack);
+        res.status(500).json({ error: 'Failed to add expense', details: error.message });
+    }
+});
+
+// Get all expenses for a user (personal + shared)
+app.get('/api/expenses', authenticateToken, async (req, res) => {
+    try {
+        const userId = req.user.id;
+        
+        // Get personal expenses
+        const personalResult = await pool.query(
+            `SELECT id, title as description, amount, date, category, description as note, created_at, 'personal' as type
+             FROM personal_expenses 
+             WHERE user_id = $1 
+             ORDER BY created_at DESC`,
+            [userId]
+        );
+        
+        // Get shared expenses where user is creator or participant
+        const sharedResult = await pool.query(
+            `SELECT se.id, se.title as description, se.amount, se.date, se.created_at, 'shared' as type,
+                    CASE WHEN se.creator_id = $1 THEN 'created' ELSE 'participant' END as role
+             FROM shared_expenses se
+             WHERE se.creator_id = $1 OR $1 = ANY(se.participants)
+             ORDER BY se.created_at DESC`,
+            [userId]
+        );
+        
+        // Combine and sort all expenses
+        const allExpenses = [...personalResult.rows, ...sharedResult.rows]
+            .sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+        
+        res.json(allExpenses);
+    } catch (error) {
+        console.error('Get expenses error:', error);
+        res.status(500).json({ error: 'Failed to get expenses' });
     }
 });
 

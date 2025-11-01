@@ -9,48 +9,75 @@ class ContactService {
 
   /// Request contacts permission from user
   static Future<bool> requestContactsPermission() async {
+    print('📱 ContactService: Checking contacts permission');
     final status = await Permission.contacts.status;
+    print('📱 ContactService: Current permission status: $status');
 
     if (status.isGranted) {
+      print('✅ ContactService: Permission already granted');
       return true;
     }
 
     if (status.isDenied) {
+      print('📱 ContactService: Permission denied, requesting...');
       final result = await Permission.contacts.request();
+      print('📱 ContactService: Permission request result: $result');
       return result.isGranted;
     }
 
     if (status.isPermanentlyDenied) {
+      print('❌ ContactService: Permission permanently denied, opening settings');
       // Guide user to settings to enable permission
       await openAppSettings();
       return false;
     }
 
-    return false;
+    print('📱 ContactService: Requesting permission for other status: $status');
+    final result = await Permission.contacts.request();
+    print('📱 ContactService: Permission request result: $result');
+    return result.isGranted;
   }
 
   /// Fetch all contacts from device
   static Future<List<Contact>> fetchContacts() async {
+    print('📱 ContactService: fetchContacts called');
+    
     if (_contactsLoaded && _cachedContacts.isNotEmpty) {
+      print('📱 ContactService: Using cached contacts (${_cachedContacts.length})');
       return _cachedContacts;
     }
 
+    print('📱 ContactService: Requesting contacts permission');
     final hasPermission = await requestContactsPermission();
     if (!hasPermission) {
+      print('❌ ContactService: Contacts permission denied');
       throw Exception('Contacts permission denied');
     }
 
+    print('✅ ContactService: Permission granted, fetching contacts');
     try {
       final contacts = await FastContacts.getAllContacts();
+      print('📱 ContactService: Retrieved ${contacts.length} total contacts');
 
-      // Filter contacts that have phone numbers
+      // Filter contacts that have phone numbers and names
       _cachedContacts = contacts
-          .where((contact) => contact.phones.isNotEmpty)
+          .where((contact) => 
+              contact.phones.isNotEmpty && 
+              contact.displayName.isNotEmpty)
           .toList();
+
+      print('📱 ContactService: Filtered to ${_cachedContacts.length} contacts with phone numbers');
+      
+      // Debug: print first few contacts
+      for (int i = 0; i < (_cachedContacts.length > 3 ? 3 : _cachedContacts.length); i++) {
+        final contact = _cachedContacts[i];
+        print('📱 ContactService: Contact ${i + 1}: ${contact.displayName} - ${contact.phones.first.number}');
+      }
 
       _contactsLoaded = true;
       return _cachedContacts;
     } catch (e) {
+      print('❌ ContactService: Failed to fetch contacts: $e');
       throw Exception('Failed to fetch contacts: $e');
     }
   }
@@ -204,6 +231,38 @@ class ContactService {
     contacts.sort((a, b) => a.displayName.compareTo(b.displayName));
 
     return contacts.take(20).toList();
+  }
+
+  /// Add friend by phone number
+  static Future<void> addFriendByPhone(String phoneNumber, String friendName) async {
+    try {
+      final cleanPhone = _cleanPhoneNumber(phoneNumber);
+      if (cleanPhone.isEmpty) {
+        throw Exception('Invalid phone number format');
+      }
+
+      // Check if user exists
+      final userExists = await DatabaseService.checkUserExists(cleanPhone);
+      
+      if (userExists) {
+        // User exists, get their info and add as friend
+        final userInfo = await DatabaseService.getUserByPhone(cleanPhone);
+        if (userInfo != null) {
+          final friend = Friend(
+            id: userInfo['id'],
+            name: userInfo['name'],
+            phoneNumber: cleanPhone,
+            email: userInfo['email'],
+          );
+          await DatabaseService.addFriend(friend);
+        }
+      } else {
+        // User doesn't exist, create friend invitation
+        await DatabaseService.addFriendByPhone(cleanPhone, friendName);
+      }
+    } catch (e) {
+      throw Exception('Failed to add friend by phone: $e');
+    }
   }
 
   /// Clear cached contacts (useful when contacts are updated)
