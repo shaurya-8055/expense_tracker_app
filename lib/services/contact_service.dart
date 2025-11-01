@@ -26,7 +26,9 @@ class ContactService {
     }
 
     if (status.isPermanentlyDenied) {
-      print('❌ ContactService: Permission permanently denied, opening settings');
+      print(
+        '❌ ContactService: Permission permanently denied, opening settings',
+      );
       // Guide user to settings to enable permission
       await openAppSettings();
       return false;
@@ -41,9 +43,11 @@ class ContactService {
   /// Fetch all contacts from device
   static Future<List<Contact>> fetchContacts() async {
     print('📱 ContactService: fetchContacts called');
-    
+
     if (_contactsLoaded && _cachedContacts.isNotEmpty) {
-      print('📱 ContactService: Using cached contacts (${_cachedContacts.length})');
+      print(
+        '📱 ContactService: Using cached contacts (${_cachedContacts.length})',
+      );
       return _cachedContacts;
     }
 
@@ -61,17 +65,26 @@ class ContactService {
 
       // Filter contacts that have phone numbers and names
       _cachedContacts = contacts
-          .where((contact) => 
-              contact.phones.isNotEmpty && 
-              contact.displayName.isNotEmpty)
+          .where(
+            (contact) =>
+                contact.phones.isNotEmpty && contact.displayName.isNotEmpty,
+          )
           .toList();
 
-      print('📱 ContactService: Filtered to ${_cachedContacts.length} contacts with phone numbers');
-      
+      print(
+        '📱 ContactService: Filtered to ${_cachedContacts.length} contacts with phone numbers',
+      );
+
       // Debug: print first few contacts
-      for (int i = 0; i < (_cachedContacts.length > 3 ? 3 : _cachedContacts.length); i++) {
+      for (
+        int i = 0;
+        i < (_cachedContacts.length > 3 ? 3 : _cachedContacts.length);
+        i++
+      ) {
         final contact = _cachedContacts[i];
-        print('📱 ContactService: Contact ${i + 1}: ${contact.displayName} - ${contact.phones.first.number}');
+        print(
+          '📱 ContactService: Contact ${i + 1}: ${contact.displayName} - ${contact.phones.first.number}',
+        );
       }
 
       _contactsLoaded = true;
@@ -234,7 +247,10 @@ class ContactService {
   }
 
   /// Add friend by phone number
-  static Future<void> addFriendByPhone(String phoneNumber, String friendName) async {
+  static Future<void> addFriendByPhone(
+    String phoneNumber,
+    String friendName,
+  ) async {
     try {
       final cleanPhone = _cleanPhoneNumber(phoneNumber);
       if (cleanPhone.isEmpty) {
@@ -243,7 +259,7 @@ class ContactService {
 
       // Check if user exists
       final userExists = await DatabaseService.checkUserExists(cleanPhone);
-      
+
       if (userExists) {
         // User exists, get their info and add as friend
         final userInfo = await DatabaseService.getUserByPhone(cleanPhone);
