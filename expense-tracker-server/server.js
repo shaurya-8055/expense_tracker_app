@@ -618,7 +618,8 @@ app.post('/api/personal-expenses', authenticateToken, async (req, res) => {
         res.json({ success: true, id });
     } catch (error) {
         console.error('Add personal expense error:', error);
-        res.status(500).json({ error: 'Failed to add personal expense' });
+        console.error('Full error details:', error.message, error.stack);
+        res.status(500).json({ error: 'Failed to add personal expense', details: error.message });
     }
 });
 

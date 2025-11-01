@@ -85,7 +85,7 @@ class DatabaseService {
 
     final token = await _getAuthToken();
     final userId = await _getCurrentUserId();
-    
+
     if (token == null || userId == null) {
       throw Exception('Authentication token or user ID not found');
     }
@@ -362,7 +362,11 @@ class DatabaseService {
   // Get personal expenses
   static Future<List<Expense>> getExpenses() async {
     try {
-      final response = await _sendRequest('GET', '/api/personal-expenses', null);
+      final response = await _sendRequest(
+        'GET',
+        '/api/personal-expenses',
+        null,
+      );
       final List<dynamic> data = json.decode(response.body);
       return data.map((json) => Expense.fromJson(json)).toList();
     } catch (e) {
