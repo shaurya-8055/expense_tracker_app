@@ -68,16 +68,14 @@ app.get('/health', (req, res) => {
     res.json({ status: 'OK', timestamp: new Date().toISOString() });
 });
 
-// In-memory user storage for development
-const users = new Map();
-const usersByPhone = new Map();
+// Authentication dependencies
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 
 const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key-change-in-production';
 
 // Authentication middleware
-const authenticateToken = (req, res, next) => {
+const authenticateToken = async (req, res, next) => {
     const authHeader = req.headers['authorization'];
     const token = authHeader && authHeader.split(' ')[1];
 
@@ -85,13 +83,21 @@ const authenticateToken = (req, res, next) => {
         return res.status(401).json({ message: 'Access token required' });
     }
 
-    jwt.verify(token, JWT_SECRET, (err, decoded) => {
-        if (err) {
-            return res.status(403).json({ message: 'Invalid or expired token' });
+    try {
+        const decoded = jwt.verify(token, JWT_SECRET);
+        
+        // Verify user exists in database
+        const userResult = await pool.query('SELECT id, name, phone, email FROM users WHERE id = $1', [decoded.userId]);
+        if (userResult.rows.length === 0) {
+            return res.status(403).json({ message: 'User not found' });
         }
+        
+        req.user = userResult.rows[0];
         req.userId = decoded.userId;
         next();
-    });
+    } catch (err) {
+        return res.status(403).json({ message: 'Invalid or expired token' });
+    }
 };
 
 // REST API Routes
@@ -106,8 +112,9 @@ app.post('/auth/register', async (req, res) => {
             return res.status(400).json({ message: 'Name, phone, and password are required' });
         }
         
-        // Check if user already exists
-        if (usersByPhone.has(phone)) {
+        // Check if user already exists in database
+        const existingUserResult = await pool.query('SELECT id FROM users WHERE phone = $1', [phone]);
+        if (existingUserResult.rows.length > 0) {
             return res.status(400).json({ message: 'User with this phone number already exists' });
         }
         
@@ -115,27 +122,26 @@ app.post('/auth/register', async (req, res) => {
         const saltRounds = 10;
         const hashedPassword = await bcrypt.hash(password, saltRounds);
         
-        // Create new user
-        const userId = `user_${Date.now()}_${Math.random().toString(36).substring(7)}`;
-        const user = { 
-            id: userId, 
-            name, 
-            phone, 
-            email: email || null, 
-            password: hashedPassword,
-            createdAt: new Date(),
-            updatedAt: new Date()
-        };
+        // Create new user in database
+        const insertResult = await pool.query(
+            'INSERT INTO users (name, phone, email, password) VALUES ($1, $2, $3, $4) RETURNING id, name, phone, email, created_at, updated_at',
+            [name, phone, email || null, hashedPassword]
+        );
         
-        users.set(userId, user);
-        usersByPhone.set(phone, user);
+        const user = insertResult.rows[0];
         
         // Generate JWT token
-        const token = jwt.sign({ userId, phone }, JWT_SECRET, { expiresIn: '30d' });
+        const token = jwt.sign({ userId: user.id, phone: user.phone }, JWT_SECRET, { expiresIn: '30d' });
         
         // Return user data without password
-        const userResponse = { ...user };
-        delete userResponse.password;
+        const userResponse = {
+            id: user.id,
+            name: user.name,
+            phone: user.phone,
+            email: user.email,
+            createdAt: user.created_at,
+            updatedAt: user.updated_at
+        };
         
         console.log(`New user registered: ${name} (${phone})`);
         res.status(201).json({ 
@@ -159,11 +165,13 @@ app.post('/auth/login', async (req, res) => {
             return res.status(400).json({ message: 'Phone and password are required' });
         }
         
-        // Check if user exists
-        const user = usersByPhone.get(phone);
-        if (!user) {
+        // Check if user exists in database
+        const userResult = await pool.query('SELECT * FROM users WHERE phone = $1', [phone]);
+        if (userResult.rows.length === 0) {
             return res.status(401).json({ message: 'Invalid phone number or password' });
         }
+        
+        const user = userResult.rows[0];
         
         // Verify password
         const isValidPassword = await bcrypt.compare(password, user.password);
@@ -175,8 +183,14 @@ app.post('/auth/login', async (req, res) => {
         const token = jwt.sign({ userId: user.id, phone }, JWT_SECRET, { expiresIn: '30d' });
         
         // Return user data without password
-        const userResponse = { ...user };
-        delete userResponse.password;
+        const userResponse = {
+            id: user.id,
+            name: user.name,
+            phone: user.phone,
+            email: user.email,
+            createdAt: user.created_at,
+            updatedAt: user.updated_at
+        };
         
         console.log(`User login: ${user.name} (${phone})`);
         res.json({ 
@@ -193,14 +207,13 @@ app.post('/auth/login', async (req, res) => {
 // Authentication - Get Profile
 app.get('/auth/profile', authenticateToken, async (req, res) => {
     try {
-        const user = users.get(req.userId);
-        if (!user) {
-            return res.status(404).json({ message: 'User not found' });
-        }
-        
-        // Return user data without password
-        const userResponse = { ...user };
-        delete userResponse.password;
+        // User data is already loaded in authenticateToken middleware
+        const userResponse = {
+            id: req.user.id,
+            name: req.user.name,
+            phone: req.user.phone,
+            email: req.user.email
+        };
         
         res.json({ user: userResponse });
     } catch (error) {
@@ -213,22 +226,28 @@ app.get('/auth/profile', authenticateToken, async (req, res) => {
 app.put('/auth/profile', authenticateToken, async (req, res) => {
     try {
         const { name, email } = req.body;
-        const user = users.get(req.userId);
         
-        if (!user) {
+        // Update user in database
+        const updateResult = await pool.query(
+            'UPDATE users SET name = COALESCE($1, name), email = COALESCE($2, email), updated_at = CURRENT_TIMESTAMP WHERE id = $3 RETURNING id, name, phone, email, created_at, updated_at',
+            [name, email, req.userId]
+        );
+        
+        if (updateResult.rows.length === 0) {
             return res.status(404).json({ message: 'User not found' });
         }
         
-        // Update user data
-        if (name) user.name = name;
-        if (email !== undefined) user.email = email;
-        user.updatedAt = new Date();
+        const user = updateResult.rows[0];
         
-        users.set(req.userId, user);
-        
-        // Return updated user data without password
-        const userResponse = { ...user };
-        delete userResponse.password;
+        // Return updated user data
+        const userResponse = {
+            id: user.id,
+            name: user.name,
+            phone: user.phone,
+            email: user.email,
+            createdAt: user.created_at,
+            updatedAt: user.updated_at
+        };
         
         console.log(`Profile updated for user: ${user.name}`);
         res.json({ 
@@ -245,11 +264,14 @@ app.put('/auth/profile', authenticateToken, async (req, res) => {
 app.put('/auth/change-password', authenticateToken, async (req, res) => {
     try {
         const { currentPassword, newPassword } = req.body;
-        const user = users.get(req.userId);
         
-        if (!user) {
+        // Get current user with password from database
+        const userResult = await pool.query('SELECT * FROM users WHERE id = $1', [req.userId]);
+        if (userResult.rows.length === 0) {
             return res.status(404).json({ message: 'User not found' });
         }
+        
+        const user = userResult.rows[0];
         
         // Verify current password
         const isValidPassword = await bcrypt.compare(currentPassword, user.password);
@@ -261,10 +283,11 @@ app.put('/auth/change-password', authenticateToken, async (req, res) => {
         const saltRounds = 10;
         const hashedPassword = await bcrypt.hash(newPassword, saltRounds);
         
-        // Update password
-        user.password = hashedPassword;
-        user.updatedAt = new Date();
-        users.set(req.userId, user);
+        // Update password in database
+        await pool.query(
+            'UPDATE users SET password = $1, updated_at = CURRENT_TIMESTAMP WHERE id = $2',
+            [hashedPassword, req.userId]
+        );
         
         console.log(`Password changed for user: ${user.name}`);
         res.json({ message: 'Password changed successfully' });
@@ -278,7 +301,10 @@ app.put('/auth/change-password', authenticateToken, async (req, res) => {
 app.post('/auth/verify-phone', async (req, res) => {
     try {
         const { phone } = req.body;
-        const exists = usersByPhone.has(phone);
+        
+        // Check if phone exists in database
+        const userResult = await pool.query('SELECT id FROM users WHERE phone = $1', [phone]);
+        const exists = userResult.rows.length > 0;
         
         console.log(`Phone verification check for ${phone}: ${exists}`);
         res.json({ 
