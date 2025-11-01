@@ -1,4 +1,4 @@
-import 'package:contacts_service/contacts_service.dart';
+import 'package:fast_contacts/fast_contacts.dart';
 import 'package:permission_handler/permission_handler.dart';
 import '../models/group_expense.dart';
 import '../services/database_service.dart';
@@ -41,16 +41,11 @@ class ContactService {
     }
 
     try {
-      final contacts = await ContactsService.getContacts(
-        withThumbnails: false,
-        photoHighResolution: false,
-      );
+      final contacts = await FastContacts.getAllContacts();
 
       // Filter contacts that have phone numbers
       _cachedContacts = contacts
-          .where(
-            (contact) => contact.phones != null && contact.phones!.isNotEmpty,
-          )
+          .where((contact) => contact.phones.isNotEmpty)
           .toList();
 
       _contactsLoaded = true;
@@ -66,10 +61,10 @@ class ContactService {
     final List<ContactMatch> matches = [];
 
     for (final contact in contacts) {
-      if (contact.phones == null || contact.phones!.isEmpty) continue;
+      if (contact.phones.isEmpty) continue;
 
-      for (final phone in contact.phones!) {
-        final cleanPhone = _cleanPhoneNumber(phone.value ?? '');
+      for (final phone in contact.phones) {
+        final cleanPhone = _cleanPhoneNumber(phone.number);
         if (cleanPhone.isEmpty) continue;
 
         try {
@@ -107,15 +102,13 @@ class ContactService {
 
     return contacts.where((contact) {
       // Search by display name
-      final name = contact.displayName?.toLowerCase() ?? '';
+      final name = contact.displayName.toLowerCase();
       if (name.contains(lowerQuery)) return true;
 
       // Search by phone numbers
-      if (contact.phones != null) {
-        for (final phone in contact.phones!) {
-          final phoneNumber = phone.value ?? '';
-          if (phoneNumber.contains(query)) return true;
-        }
+      for (final phone in contact.phones) {
+        final phoneNumber = phone.number;
+        if (phoneNumber.contains(query)) return true;
       }
 
       return false;
@@ -127,18 +120,16 @@ class ContactService {
     final List<String> inviteLinks = [];
 
     for (final contact in contacts) {
-      if (contact.phones == null || contact.phones!.isEmpty) continue;
+      if (contact.phones.isEmpty) continue;
 
-      final primaryPhone = _cleanPhoneNumber(contact.phones!.first.value ?? '');
+      final primaryPhone = _cleanPhoneNumber(contact.phones.first.number);
       if (primaryPhone.isEmpty) continue;
 
       try {
         final inviteLink = await DatabaseService.inviteFriend(
-          contact.displayName ?? 'Friend',
+          contact.displayName,
           primaryPhone,
-          contact.emails?.isNotEmpty == true
-              ? contact.emails!.first.value
-              : null,
+          contact.emails.isNotEmpty ? contact.emails.first.address : null,
         );
         inviteLinks.add(inviteLink);
       } catch (e) {
@@ -161,7 +152,7 @@ class ContactService {
           id:
               match.userInfo?['id'] ??
               'contact_${DateTime.now().millisecondsSinceEpoch}',
-          name: match.contact.displayName ?? 'Unknown',
+          name: match.contact.displayName,
           phoneNumber: match.phoneNumber,
           email: match.userInfo?['email'],
         );
@@ -210,9 +201,7 @@ class ContactService {
     final contacts = await fetchContacts();
 
     // Sort by display name and return top 20
-    contacts.sort(
-      (a, b) => (a.displayName ?? '').compareTo(b.displayName ?? ''),
-    );
+    contacts.sort((a, b) => a.displayName.compareTo(b.displayName));
 
     return contacts.take(20).toList();
   }
@@ -238,7 +227,7 @@ class ContactMatch {
     required this.isAlreadyFriend,
   });
 
-  String get displayName => contact.displayName ?? 'Unknown';
+  String get displayName => contact.displayName;
   String get primaryPhone => phoneNumber;
   String? get email => userInfo?['email'];
   bool get hasAccount => userInfo != null;

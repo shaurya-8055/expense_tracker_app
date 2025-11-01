@@ -78,3 +78,23 @@ class AppStrings {
   static const noExpenses = 'No expenses yet';
   static const addFirstExpense = 'Tap + to add your first expense';
 }
+
+// Server Configuration
+class ServerConfig {
+  // Use 10.0.2.2 for Android emulator to access localhost
+  static const String baseUrl = 'http://10.0.2.2:8080';
+  static const String wsUrl = 'ws://10.0.2.2:8080';
+  
+  // API Endpoints
+  static const String authRegister = '/auth/register';
+  static const String authLogin = '/auth/login';
+  static const String authProfile = '/auth/profile';
+  static const String authChangePassword = '/auth/change-password';
+  static const String authVerifyPhone = '/auth/verify-phone';
+  
+  // Connection timeout
+  static const Duration timeout = Duration(seconds: 30);
+}
+
+// Global access to base URL
+const String baseUrl = ServerConfig.baseUrl;

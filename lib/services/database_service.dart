@@ -6,11 +6,12 @@ import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import '../models/expense.dart';
 import '../models/udhari.dart';
 import '../models/group_expense.dart';
+import 'auth_service.dart';
 
 class DatabaseService {
   // For local development - update these when you deploy
-  static const String _baseUrl = 'http://localhost:8080/api';
-  static const String _wsUrl = 'ws://localhost:8080';
+  static const String _baseUrl = 'http://10.0.2.2:8080/api';
+  static const String _wsUrl = 'ws://10.0.2.2:8080';
   static const FlutterSecureStorage _storage = FlutterSecureStorage();
 
   static String? _userId;

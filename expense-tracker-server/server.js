@@ -71,35 +71,223 @@ app.get('/health', (req, res) => {
 // In-memory user storage for development
 const users = new Map();
 const usersByPhone = new Map();
+const bcrypt = require('bcrypt');
+const jwt = require('jsonwebtoken');
+
+const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key-change-in-production';
+
+// Authentication middleware
+const authenticateToken = (req, res, next) => {
+    const authHeader = req.headers['authorization'];
+    const token = authHeader && authHeader.split(' ')[1];
+
+    if (!token) {
+        return res.status(401).json({ message: 'Access token required' });
+    }
+
+    jwt.verify(token, JWT_SECRET, (err, decoded) => {
+        if (err) {
+            return res.status(403).json({ message: 'Invalid or expired token' });
+        }
+        req.userId = decoded.userId;
+        next();
+    });
+};
 
 // REST API Routes
 
-// Authentication
-app.post('/api/auth/login', async (req, res) => {
+// Authentication - Register
+app.post('/auth/register', async (req, res) => {
     try {
-        const { name, phone, email } = req.body;
+        const { name, phone, password, email } = req.body;
         
-        // Check if user exists by phone
-        let user = usersByPhone.get(phone);
-        
-        if (!user) {
-            // Create new user
-            const userId = `user_${Date.now()}_${Math.random().toString(36).substring(7)}`;
-            user = { id: userId, name, phone, email, createdAt: new Date() };
-            users.set(userId, user);
-            usersByPhone.set(phone, user);
-            console.log(`New user registered: ${name} (${phone})`);
-        } else {
-            console.log(`Existing user login: ${user.name} (${phone})`);
+        // Validate required fields
+        if (!name || !phone || !password) {
+            return res.status(400).json({ message: 'Name, phone, and password are required' });
         }
         
+        // Check if user already exists
+        if (usersByPhone.has(phone)) {
+            return res.status(400).json({ message: 'User with this phone number already exists' });
+        }
+        
+        // Hash password
+        const saltRounds = 10;
+        const hashedPassword = await bcrypt.hash(password, saltRounds);
+        
+        // Create new user
+        const userId = `user_${Date.now()}_${Math.random().toString(36).substring(7)}`;
+        const user = { 
+            id: userId, 
+            name, 
+            phone, 
+            email: email || null, 
+            password: hashedPassword,
+            createdAt: new Date(),
+            updatedAt: new Date()
+        };
+        
+        users.set(userId, user);
+        usersByPhone.set(phone, user);
+        
+        // Generate JWT token
+        const token = jwt.sign({ userId, phone }, JWT_SECRET, { expiresIn: '30d' });
+        
+        // Return user data without password
+        const userResponse = { ...user };
+        delete userResponse.password;
+        
+        console.log(`New user registered: ${name} (${phone})`);
+        res.status(201).json({ 
+            message: 'User registered successfully',
+            user: userResponse, 
+            token 
+        });
+    } catch (error) {
+        console.error('Registration error:', error);
+        res.status(500).json({ message: 'Registration failed' });
+    }
+});
+
+// Authentication - Login
+app.post('/auth/login', async (req, res) => {
+    try {
+        const { phone, password } = req.body;
+        
+        // Validate required fields
+        if (!phone || !password) {
+            return res.status(400).json({ message: 'Phone and password are required' });
+        }
+        
+        // Check if user exists
+        const user = usersByPhone.get(phone);
+        if (!user) {
+            return res.status(401).json({ message: 'Invalid phone number or password' });
+        }
+        
+        // Verify password
+        const isValidPassword = await bcrypt.compare(password, user.password);
+        if (!isValidPassword) {
+            return res.status(401).json({ message: 'Invalid phone number or password' });
+        }
+        
+        // Generate JWT token
+        const token = jwt.sign({ userId: user.id, phone }, JWT_SECRET, { expiresIn: '30d' });
+        
+        // Return user data without password
+        const userResponse = { ...user };
+        delete userResponse.password;
+        
+        console.log(`User login: ${user.name} (${phone})`);
         res.json({ 
-            user: user, 
-            token: user.id 
+            message: 'Login successful',
+            user: userResponse, 
+            token 
         });
     } catch (error) {
         console.error('Login error:', error);
-        res.status(500).json({ error: 'Login failed' });
+        res.status(500).json({ message: 'Login failed' });
+    }
+});
+
+// Authentication - Get Profile
+app.get('/auth/profile', authenticateToken, async (req, res) => {
+    try {
+        const user = users.get(req.userId);
+        if (!user) {
+            return res.status(404).json({ message: 'User not found' });
+        }
+        
+        // Return user data without password
+        const userResponse = { ...user };
+        delete userResponse.password;
+        
+        res.json({ user: userResponse });
+    } catch (error) {
+        console.error('Get profile error:', error);
+        res.status(500).json({ message: 'Failed to get profile' });
+    }
+});
+
+// Authentication - Update Profile
+app.put('/auth/profile', authenticateToken, async (req, res) => {
+    try {
+        const { name, email } = req.body;
+        const user = users.get(req.userId);
+        
+        if (!user) {
+            return res.status(404).json({ message: 'User not found' });
+        }
+        
+        // Update user data
+        if (name) user.name = name;
+        if (email !== undefined) user.email = email;
+        user.updatedAt = new Date();
+        
+        users.set(req.userId, user);
+        
+        // Return updated user data without password
+        const userResponse = { ...user };
+        delete userResponse.password;
+        
+        console.log(`Profile updated for user: ${user.name}`);
+        res.json({ 
+            message: 'Profile updated successfully',
+            user: userResponse 
+        });
+    } catch (error) {
+        console.error('Update profile error:', error);
+        res.status(500).json({ message: 'Failed to update profile' });
+    }
+});
+
+// Authentication - Change Password
+app.put('/auth/change-password', authenticateToken, async (req, res) => {
+    try {
+        const { currentPassword, newPassword } = req.body;
+        const user = users.get(req.userId);
+        
+        if (!user) {
+            return res.status(404).json({ message: 'User not found' });
+        }
+        
+        // Verify current password
+        const isValidPassword = await bcrypt.compare(currentPassword, user.password);
+        if (!isValidPassword) {
+            return res.status(401).json({ message: 'Current password is incorrect' });
+        }
+        
+        // Hash new password
+        const saltRounds = 10;
+        const hashedPassword = await bcrypt.hash(newPassword, saltRounds);
+        
+        // Update password
+        user.password = hashedPassword;
+        user.updatedAt = new Date();
+        users.set(req.userId, user);
+        
+        console.log(`Password changed for user: ${user.name}`);
+        res.json({ message: 'Password changed successfully' });
+    } catch (error) {
+        console.error('Change password error:', error);
+        res.status(500).json({ message: 'Failed to change password' });
+    }
+});
+
+// Authentication - Verify Phone
+app.post('/auth/verify-phone', async (req, res) => {
+    try {
+        const { phone } = req.body;
+        const exists = usersByPhone.has(phone);
+        
+        console.log(`Phone verification check for ${phone}: ${exists}`);
+        res.json({ 
+            message: 'Phone verification check completed',
+            exists 
+        });
+    } catch (error) {
+        console.error('Phone verification error:', error);
+        res.status(500).json({ message: 'Phone verification failed' });
     }
 });
 

@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:contacts_service/contacts_service.dart';
+import 'package:fast_contacts/fast_contacts.dart';
 import 'package:provider/provider.dart';
 import '../services/contact_service.dart';
 import '../providers/synced_group_expense_provider.dart';
@@ -97,9 +97,8 @@ class _ContactPickerScreenState extends State<ContactPickerScreen>
         _filteredContacts = _allContacts;
       } else {
         _filteredContacts = _allContacts.where((contact) {
-          final name = contact.displayName?.toLowerCase() ?? '';
-          final phones =
-              contact.phones?.map((p) => p.value ?? '').join(' ') ?? '';
+          final name = contact.displayName.toLowerCase();
+          final phones = contact.phones.map((p) => p.number).join(' ');
           return name.contains(query.toLowerCase()) || phones.contains(query);
         }).toList();
       }
@@ -109,10 +108,10 @@ class _ContactPickerScreenState extends State<ContactPickerScreen>
   void _toggleContactSelection(ContactMatch contactMatch) {
     setState(() {
       if (_selectedContacts.any(
-        (c) => c.contact.identifier == contactMatch.contact.identifier,
+        (c) => c.contact.id == contactMatch.contact.id,
       )) {
         _selectedContacts.removeWhere(
-          (c) => c.contact.identifier == contactMatch.contact.identifier,
+          (c) => c.contact.id == contactMatch.contact.id,
         );
       } else {
         _selectedContacts.add(contactMatch);
@@ -378,7 +377,7 @@ class _ContactPickerScreenState extends State<ContactPickerScreen>
       itemBuilder: (context, index) {
         final contactMatch = _friendsWithAccounts[index];
         final isSelected = _selectedContacts.any(
-          (c) => c.contact.identifier == contactMatch.contact.identifier,
+          (c) => c.contact.id == contactMatch.contact.id,
         );
 
         return _buildContactMatchTile(contactMatch, isSelected);
@@ -403,12 +402,12 @@ class _ContactPickerScreenState extends State<ContactPickerScreen>
         final contact = _filteredContacts[index];
         final contactMatch = ContactMatch(
           contact: contact,
-          phoneNumber: contact.phones?.first.value ?? '',
+          phoneNumber: contact.phones.first.number,
           isAlreadyFriend: false,
         );
 
         final isSelected = _selectedContacts.any(
-          (c) => c.contact.identifier == contact.identifier,
+          (c) => c.contact.id == contact.id,
         );
 
         return _buildContactTile(contactMatch, isSelected);

@@ -4,7 +4,7 @@ import 'providers/expense_provider.dart';
 import 'providers/udhari_provider.dart';
 import 'providers/group_expense_provider.dart';
 import 'providers/synced_group_expense_provider.dart';
-import 'screens/home_screen.dart';
+import 'screens/auth_wrapper.dart';
 import 'screens/group_expense_screen.dart';
 import 'utils/constants.dart';
 
@@ -72,7 +72,7 @@ class MyApp extends StatelessWidget {
             ),
           ),
         ),
-        home: const HomeScreen(),
+        home: const AuthWrapper(),
         routes: {'/group-expenses': (context) => const GroupExpenseScreen()},
       ),
     );

@@ -13,6 +13,7 @@ import 'statistics_screen.dart';
 import 'udhari_screen.dart';
 import 'group_expense_screen.dart';
 import 'friends_management_screen.dart';
+import 'profile_screen.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -140,7 +141,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 const Text(
                   AppStrings.appName,
                   style: TextStyle(
-                    fontSize: 32,
+                    fontSize: 28,
                     fontWeight: FontWeight.bold,
                     color: AppColors.textPrimary,
                     letterSpacing: -0.5,
@@ -149,21 +150,27 @@ class _HomeScreenState extends State<HomeScreen> {
                 const SizedBox(height: 6),
                 Row(
                   children: [
-                    Icon(
-                      Icons.calendar_today,
-                      size: 14,
-                      color: AppColors.textSecondary,
-                    ),
-                    const SizedBox(width: 6),
-                    Text(
-                      _getCurrentDate(),
-                      style: const TextStyle(
-                        fontSize: 14,
-                        color: AppColors.textSecondary,
-                        fontWeight: FontWeight.w500,
+                    Expanded(
+                      child: Wrap(
+                        crossAxisAlignment: WrapCrossAlignment.center,
+                        children: [
+                          Icon(
+                            Icons.calendar_today,
+                            size: 14,
+                            color: AppColors.textSecondary,
+                          ),
+                          const SizedBox(width: 6),
+                          Text(
+                            _getCurrentDate(),
+                            style: const TextStyle(
+                              fontSize: 14,
+                              color: AppColors.textSecondary,
+                              fontWeight: FontWeight.w500,
+                            ),
+                          ),
+                        ],
                       ),
                     ),
-                    const SizedBox(width: 16),
                     const ConnectionStatusWidget(),
                   ],
                 ),
@@ -200,6 +207,27 @@ class _HomeScreenState extends State<HomeScreen> {
               icon: const Icon(Icons.file_download),
               onPressed: _showExportOptions,
               tooltip: 'Export to PDF',
+              color: AppColors.primary,
+              iconSize: 24,
+            ),
+          ),
+          const SizedBox(width: 12),
+          Container(
+            decoration: BoxDecoration(
+              color: AppColors.primary.withOpacity(0.1),
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: IconButton(
+              icon: const Icon(Icons.account_circle),
+              onPressed: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => const ProfileScreen(),
+                  ),
+                );
+              },
+              tooltip: 'Profile',
               color: AppColors.primary,
               iconSize: 24,
             ),

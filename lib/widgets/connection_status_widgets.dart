@@ -2,6 +2,46 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../providers/synced_group_expense_provider.dart';
 
+class ConnectionStatusBadge extends StatelessWidget {
+  const ConnectionStatusBadge({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return Consumer<SyncedGroupExpenseProvider>(
+      builder: (context, provider, child) {
+        return Container(
+          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+          decoration: BoxDecoration(
+            color: provider.isOnline
+                ? Colors.green.withOpacity(0.2)
+                : Colors.red.withOpacity(0.2),
+            borderRadius: BorderRadius.circular(12),
+          ),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(
+                provider.isOnline ? Icons.wifi : Icons.wifi_off,
+                size: 12,
+                color: provider.isOnline ? Colors.green : Colors.red,
+              ),
+              const SizedBox(width: 4),
+              Text(
+                provider.isOnline ? 'Online' : 'Offline',
+                style: TextStyle(
+                  color: provider.isOnline ? Colors.green : Colors.red,
+                  fontSize: 10,
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+}
+
 class ConnectionStatusWidget extends StatelessWidget {
   const ConnectionStatusWidget({super.key});
 

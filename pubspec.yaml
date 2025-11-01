@@ -76,8 +76,8 @@ dependencies:
 
   # Contact access
 
-  contacts_service: ^0.6.3
-  permission_handler: ^12.0.1
+  permission_handler: ^11.0.1
+  fast_contacts: ^5.0.1
 
 dev_dependencies:
   flutter_test:
