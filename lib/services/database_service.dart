@@ -2,52 +2,41 @@ import 'dart:convert';
 import 'dart:io';
 import 'package:http/http.dart' as http;
 import 'package:web_socket_channel/web_socket_channel.dart';
-import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import '../models/expense.dart';
 import '../models/udhari.dart';
 import '../models/group_expense.dart';
+import '../utils/constants.dart';
 import 'auth_service.dart';
 
 class DatabaseService {
-  // For local development - update these when you deploy
-  static const String _baseUrl = 'http://10.0.2.2:8080/api';
-  static const String _wsUrl = 'ws://10.0.2.2:8080';
-  static const FlutterSecureStorage _storage = FlutterSecureStorage();
-
-  static String? _userId;
-  static String? _authToken;
   static WebSocketChannel? _wsChannel;
   static Function(Map<String, dynamic>)? _onDataUpdate;
 
-  // Initialize user session
+  // Initialize user session with authentication
   static Future<bool> initializeUser() async {
-    _userId = await _storage.read(key: 'user_id');
-    _authToken = await _storage.read(key: 'auth_token');
+    return await AuthService.isLoggedIn();
+  }
 
-    if (_userId == null) {
-      // Generate new user ID if first time
-      _userId = 'user_${DateTime.now().millisecondsSinceEpoch}';
-      await _storage.write(key: 'user_id', value: _userId);
-    }
+  // Get authenticated user ID
+  static Future<String?> _getCurrentUserId() async {
+    final user = await AuthService.getCurrentUser();
+    return user?['id']?.toString();
+  }
 
-    if (_authToken == null) {
-      // Generate auth token
-      _authToken = 'token_${DateTime.now().millisecondsSinceEpoch}';
-      await _storage.write(key: 'auth_token', value: _authToken);
-    }
-
-    return true;
+  // Get authentication token
+  static Future<String?> _getAuthToken() async {
+    return await AuthService.getToken();
   }
 
   // Connect to WebSocket for real-time updates
   static Future<void> connectWebSocket({
     required Function(Map<String, dynamic>) onDataUpdate,
   }) async {
-    if (_userId == null) await initializeUser();
+    if (!await initializeUser()) return;
 
     try {
       _onDataUpdate = onDataUpdate;
-      _wsChannel = WebSocketChannel.connect(Uri.parse(_wsUrl));
+      _wsChannel = WebSocketChannel.connect(Uri.parse(ServerConfig.wsUrl));
 
       _wsChannel!.stream.listen(
         (data) {
@@ -90,15 +79,22 @@ class DatabaseService {
     String endpoint,
     Map<String, dynamic>? data,
   ) async {
-    if (_userId == null || _authToken == null) {
-      await initializeUser();
+    if (!await initializeUser()) {
+      throw Exception('User not authenticated');
     }
 
-    final uri = Uri.parse('$_baseUrl$endpoint');
+    final token = await _getAuthToken();
+    final userId = await _getCurrentUserId();
+    
+    if (token == null || userId == null) {
+      throw Exception('Authentication token or user ID not found');
+    }
+
+    final uri = Uri.parse('${ServerConfig.baseUrl}$endpoint');
     final headers = {
       'Content-Type': 'application/json',
-      'Authorization': 'Bearer $_authToken',
-      'User-ID': _userId!,
+      'Authorization': 'Bearer $token',
+      'User-ID': userId,
     };
 
     http.Response response;
@@ -139,12 +135,15 @@ class DatabaseService {
   // Add friend and notify all connected users
   static Future<void> addFriend(Friend friend) async {
     try {
-      await _sendRequest('POST', '/friends', {
+      final userId = await _getCurrentUserId();
+      if (userId == null) throw Exception('User not authenticated');
+
+      await _sendRequest('POST', '/api/friends', {
         'id': friend.id,
         'name': friend.name,
         'email': friend.email,
         'phoneNumber': friend.phoneNumber,
-        'addedBy': _userId,
+        'addedBy': userId,
         'timestamp': DateTime.now().toIso8601String(),
       });
 
@@ -152,7 +151,7 @@ class DatabaseService {
       _broadcastUpdate({
         'type': 'friend_added',
         'data': friend.toJson(),
-        'userId': _userId,
+        'userId': userId,
         'timestamp': DateTime.now().toIso8601String(),
       });
     } catch (e) {
@@ -163,18 +162,21 @@ class DatabaseService {
   // Update friend
   static Future<void> updateFriend(Friend friend) async {
     try {
-      await _sendRequest('PUT', '/friends/${friend.id}', {
+      final userId = await _getCurrentUserId();
+      if (userId == null) throw Exception('User not authenticated');
+
+      await _sendRequest('PUT', '/api/friends/${friend.id}', {
         'name': friend.name,
         'email': friend.email,
         'phoneNumber': friend.phoneNumber,
-        'updatedBy': _userId,
+        'updatedBy': userId,
         'timestamp': DateTime.now().toIso8601String(),
       });
 
       _broadcastUpdate({
         'type': 'friend_updated',
         'data': friend.toJson(),
-        'userId': _userId,
+        'userId': userId,
         'timestamp': DateTime.now().toIso8601String(),
       });
     } catch (e) {
@@ -185,12 +187,15 @@ class DatabaseService {
   // Delete friend
   static Future<void> deleteFriend(String friendId) async {
     try {
-      await _sendRequest('DELETE', '/friends/$friendId', null);
+      final userId = await _getCurrentUserId();
+      if (userId == null) throw Exception('User not authenticated');
+
+      await _sendRequest('DELETE', '/api/friends/$friendId', null);
 
       _broadcastUpdate({
         'type': 'friend_deleted',
         'data': {'id': friendId},
-        'userId': _userId,
+        'userId': userId,
         'timestamp': DateTime.now().toIso8601String(),
       });
     } catch (e) {
@@ -201,7 +206,7 @@ class DatabaseService {
   // Get all friends
   static Future<List<Friend>> getFriends() async {
     try {
-      final response = await _sendRequest('GET', '/friends', null);
+      final response = await _sendRequest('GET', '/api/friends', null);
       final List<dynamic> data = json.decode(response.body);
       return data.map((json) => Friend.fromJson(json)).toList();
     } catch (e) {
@@ -214,7 +219,10 @@ class DatabaseService {
   // Add group expense
   static Future<void> addGroupExpense(GroupExpense expense) async {
     try {
-      await _sendRequest('POST', '/group-expenses', {
+      final userId = await _getCurrentUserId();
+      if (userId == null) throw Exception('User not authenticated');
+
+      await _sendRequest('POST', '/api/group-expenses', {
         'id': expense.id,
         'title': expense.title,
         'totalAmount': expense.totalAmount,
@@ -224,14 +232,14 @@ class DatabaseService {
         'participants': expense.participants,
         'splits': expense.splits,
         'note': expense.note,
-        'createdBy': _userId,
+        'createdBy': userId,
         'timestamp': DateTime.now().toIso8601String(),
       });
 
       _broadcastUpdate({
         'type': 'group_expense_added',
         'data': expense.toJson(),
-        'userId': _userId,
+        'userId': userId,
         'timestamp': DateTime.now().toIso8601String(),
       });
     } catch (e) {
@@ -242,7 +250,10 @@ class DatabaseService {
   // Update group expense
   static Future<void> updateGroupExpense(GroupExpense expense) async {
     try {
-      await _sendRequest('PUT', '/group-expenses/${expense.id}', {
+      final userId = await _getCurrentUserId();
+      if (userId == null) throw Exception('User not authenticated');
+
+      await _sendRequest('PUT', '/api/group-expenses/${expense.id}', {
         'title': expense.title,
         'totalAmount': expense.totalAmount,
         'date': expense.date.toIso8601String(),
@@ -251,14 +262,14 @@ class DatabaseService {
         'participants': expense.participants,
         'splits': expense.splits,
         'note': expense.note,
-        'updatedBy': _userId,
+        'updatedBy': userId,
         'timestamp': DateTime.now().toIso8601String(),
       });
 
       _broadcastUpdate({
         'type': 'group_expense_updated',
         'data': expense.toJson(),
-        'userId': _userId,
+        'userId': userId,
         'timestamp': DateTime.now().toIso8601String(),
       });
     } catch (e) {
@@ -269,12 +280,15 @@ class DatabaseService {
   // Delete group expense
   static Future<void> deleteGroupExpense(String expenseId) async {
     try {
-      await _sendRequest('DELETE', '/group-expenses/$expenseId', null);
+      final userId = await _getCurrentUserId();
+      if (userId == null) throw Exception('User not authenticated');
+
+      await _sendRequest('DELETE', '/api/group-expenses/$expenseId', null);
 
       _broadcastUpdate({
         'type': 'group_expense_deleted',
         'data': {'id': expenseId},
-        'userId': _userId,
+        'userId': userId,
         'timestamp': DateTime.now().toIso8601String(),
       });
     } catch (e) {
@@ -285,7 +299,7 @@ class DatabaseService {
   // Get all group expenses
   static Future<List<GroupExpense>> getGroupExpenses() async {
     try {
-      final response = await _sendRequest('GET', '/group-expenses', null);
+      final response = await _sendRequest('GET', '/api/group-expenses', null);
       final List<dynamic> data = json.decode(response.body);
       return data.map((json) => GroupExpense.fromJson(json)).toList();
     } catch (e) {
@@ -298,14 +312,17 @@ class DatabaseService {
   // Add personal expense
   static Future<void> addExpense(Expense expense) async {
     try {
-      await _sendRequest('POST', '/expenses', {
+      final userId = await _getCurrentUserId();
+      if (userId == null) throw Exception('User not authenticated');
+
+      await _sendRequest('POST', '/api/personal-expenses', {
         'id': expense.id,
         'title': expense.title,
         'amount': expense.amount,
         'date': expense.date.toIso8601String(),
         'category': expense.category.index,
         'note': expense.note,
-        'createdBy': _userId,
+        'createdBy': userId,
         'timestamp': DateTime.now().toIso8601String(),
       });
     } catch (e) {
@@ -313,10 +330,39 @@ class DatabaseService {
     }
   }
 
+  // Update personal expense
+  static Future<void> updateExpense(Expense expense) async {
+    try {
+      final userId = await _getCurrentUserId();
+      if (userId == null) throw Exception('User not authenticated');
+
+      await _sendRequest('PUT', '/api/personal-expenses/${expense.id}', {
+        'title': expense.title,
+        'amount': expense.amount,
+        'date': expense.date.toIso8601String(),
+        'category': expense.category.index,
+        'note': expense.note,
+        'updatedBy': userId,
+        'timestamp': DateTime.now().toIso8601String(),
+      });
+    } catch (e) {
+      throw Exception('Failed to update expense: $e');
+    }
+  }
+
+  // Delete personal expense
+  static Future<void> deleteExpense(String expenseId) async {
+    try {
+      await _sendRequest('DELETE', '/api/personal-expenses/$expenseId', null);
+    } catch (e) {
+      throw Exception('Failed to delete expense: $e');
+    }
+  }
+
   // Get personal expenses
   static Future<List<Expense>> getExpenses() async {
     try {
-      final response = await _sendRequest('GET', '/expenses', null);
+      final response = await _sendRequest('GET', '/api/personal-expenses', null);
       final List<dynamic> data = json.decode(response.body);
       return data.map((json) => Expense.fromJson(json)).toList();
     } catch (e) {
@@ -329,7 +375,10 @@ class DatabaseService {
   // Add udhari
   static Future<void> addUdhari(Udhari udhari) async {
     try {
-      await _sendRequest('POST', '/udhari', {
+      final userId = await _getCurrentUserId();
+      if (userId == null) throw Exception('User not authenticated');
+
+      await _sendRequest('POST', '/api/udhari', {
         'id': udhari.id,
         'personName': udhari.personName,
         'amount': udhari.amount,
@@ -340,7 +389,7 @@ class DatabaseService {
         'dueDate': udhari.dueDate?.toIso8601String(),
         'note': udhari.note,
         'phoneNumber': udhari.phoneNumber,
-        'createdBy': _userId,
+        'createdBy': userId,
         'timestamp': DateTime.now().toIso8601String(),
       });
     } catch (e) {
@@ -348,10 +397,43 @@ class DatabaseService {
     }
   }
 
+  // Update udhari
+  static Future<void> updateUdhari(Udhari udhari) async {
+    try {
+      final userId = await _getCurrentUserId();
+      if (userId == null) throw Exception('User not authenticated');
+
+      await _sendRequest('PUT', '/api/udhari/${udhari.id}', {
+        'personName': udhari.personName,
+        'amount': udhari.amount,
+        'amountPaid': udhari.amountPaid,
+        'type': udhari.type.index,
+        'status': udhari.status.index,
+        'date': udhari.date.toIso8601String(),
+        'dueDate': udhari.dueDate?.toIso8601String(),
+        'note': udhari.note,
+        'phoneNumber': udhari.phoneNumber,
+        'updatedBy': userId,
+        'timestamp': DateTime.now().toIso8601String(),
+      });
+    } catch (e) {
+      throw Exception('Failed to update udhari: $e');
+    }
+  }
+
+  // Delete udhari
+  static Future<void> deleteUdhari(String udhariId) async {
+    try {
+      await _sendRequest('DELETE', '/api/udhari/$udhariId', null);
+    } catch (e) {
+      throw Exception('Failed to delete udhari: $e');
+    }
+  }
+
   // Get udhari records
   static Future<List<Udhari>> getUdhariRecords() async {
     try {
-      final response = await _sendRequest('GET', '/udhari', null);
+      final response = await _sendRequest('GET', '/api/udhari', null);
       final List<dynamic> data = json.decode(response.body);
       return data.map((json) => Udhari.fromJson(json)).toList();
     } catch (e) {
@@ -368,11 +450,14 @@ class DatabaseService {
     String? friendEmail,
   ) async {
     try {
-      final response = await _sendRequest('POST', '/invite', {
+      final userId = await _getCurrentUserId();
+      if (userId == null) throw Exception('User not authenticated');
+
+      final response = await _sendRequest('POST', '/api/invite', {
         'friendName': friendName,
         'friendPhone': friendPhone,
         'friendEmail': friendEmail,
-        'invitedBy': _userId,
+        'invitedBy': userId,
         'inviteCode': 'inv_${DateTime.now().millisecondsSinceEpoch}',
         'timestamp': DateTime.now().toIso8601String(),
       });
@@ -387,9 +472,12 @@ class DatabaseService {
   // Accept invite and connect with existing user
   static Future<void> acceptInvite(String inviteCode) async {
     try {
-      await _sendRequest('POST', '/accept-invite', {
+      final userId = await _getCurrentUserId();
+      if (userId == null) throw Exception('User not authenticated');
+
+      await _sendRequest('POST', '/api/accept-invite', {
         'inviteCode': inviteCode,
-        'acceptedBy': _userId,
+        'acceptedBy': userId,
         'timestamp': DateTime.now().toIso8601String(),
       });
     } catch (e) {
@@ -400,7 +488,7 @@ class DatabaseService {
   // Get user's current balance with all friends
   static Future<Map<String, double>> getBalances() async {
     try {
-      final response = await _sendRequest('GET', '/balances', null);
+      final response = await _sendRequest('GET', '/api/balances', null);
       final Map<String, dynamic> data = json.decode(response.body);
       return data.map((key, value) => MapEntry(key, value.toDouble()));
     } catch (e) {
@@ -422,7 +510,9 @@ class DatabaseService {
   }
 
   // Get current user ID
-  static String? get currentUserId => _userId;
+  static Future<String?> getCurrentUserId() async {
+    return await _getCurrentUserId();
+  }
 
   // Check if connected to internet
   static Future<bool> hasInternetConnection() async {
@@ -446,7 +536,7 @@ class DatabaseService {
   /// Check if a user exists with the given phone number
   static Future<bool> checkUserExists(String phoneNumber) async {
     try {
-      final response = await _sendRequest('POST', '/users/check', {
+      final response = await _sendRequest('POST', '/api/users/check', {
         'phone': phoneNumber,
       });
 
@@ -466,7 +556,7 @@ class DatabaseService {
     String phoneNumber,
   ) async {
     try {
-      final response = await _sendRequest('POST', '/users/by-phone', {
+      final response = await _sendRequest('POST', '/api/users/by-phone', {
         'phone': phoneNumber,
       });
 
@@ -488,7 +578,7 @@ class DatabaseService {
     String? email,
   }) async {
     try {
-      final response = await _sendRequest('POST', '/users/register', {
+      final response = await _sendRequest('POST', '/api/users/register', {
         'name': name,
         'phone': phone,
         'email': email,
@@ -508,7 +598,7 @@ class DatabaseService {
   /// Search users by name or phone (for finding friends)
   static Future<List<Map<String, dynamic>>> searchUsers(String query) async {
     try {
-      final response = await _sendRequest('POST', '/users/search', {
+      final response = await _sendRequest('POST', '/api/users/search', {
         'query': query,
       });
 

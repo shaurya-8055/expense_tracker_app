@@ -1,10 +1,10 @@
 import 'package:flutter/foundation.dart';
 import '../models/expense.dart';
-import '../services/storage_service.dart';
+import '../services/database_service.dart';
+import '../services/auth_service.dart';
 
 class ExpenseProvider with ChangeNotifier {
   List<Expense> _expenses = [];
-  final StorageService _storageService = StorageService();
   bool _isLoading = false;
   DateTime? _filterStartDate;
   DateTime? _filterEndDate;
@@ -92,30 +92,72 @@ class ExpenseProvider with ChangeNotifier {
     _isLoading = true;
     notifyListeners();
 
-    _expenses = await _storageService.loadExpenses();
+    try {
+      // Check if user is authenticated
+      if (await AuthService.isLoggedIn()) {
+        // Load from server
+        _expenses = await DatabaseService.getExpenses();
+      } else {
+        // User not authenticated, show empty list
+        _expenses = [];
+      }
+    } catch (e) {
+      print('Error loading expenses: $e');
+      _expenses = [];
+    }
 
     _isLoading = false;
     notifyListeners();
   }
 
   Future<void> addExpense(Expense expense) async {
-    _expenses.add(expense);
-    await _storageService.saveExpenses(_expenses);
+    try {
+      // Add to server if authenticated
+      if (await AuthService.isLoggedIn()) {
+        await DatabaseService.addExpense(expense);
+        _expenses.add(expense);
+      } else {
+        throw Exception('User not authenticated');
+      }
+    } catch (e) {
+      print('Error adding expense: $e');
+      rethrow;
+    }
     notifyListeners();
   }
 
   Future<void> updateExpense(String id, Expense updatedExpense) async {
-    final index = _expenses.indexWhere((expense) => expense.id == id);
-    if (index != -1) {
-      _expenses[index] = updatedExpense;
-      await _storageService.saveExpenses(_expenses);
-      notifyListeners();
+    try {
+      final index = _expenses.indexWhere((expense) => expense.id == id);
+      if (index != -1) {
+        // Update on server if authenticated
+        if (await AuthService.isLoggedIn()) {
+          await DatabaseService.updateExpense(updatedExpense);
+          _expenses[index] = updatedExpense;
+        } else {
+          throw Exception('User not authenticated');
+        }
+      }
+    } catch (e) {
+      print('Error updating expense: $e');
+      rethrow;
     }
+    notifyListeners();
   }
 
   Future<void> deleteExpense(String id) async {
-    _expenses.removeWhere((expense) => expense.id == id);
-    await _storageService.saveExpenses(_expenses);
+    try {
+      // Delete from server if authenticated
+      if (await AuthService.isLoggedIn()) {
+        await DatabaseService.deleteExpense(id);
+        _expenses.removeWhere((expense) => expense.id == id);
+      } else {
+        throw Exception('User not authenticated');
+      }
+    } catch (e) {
+      print('Error deleting expense: $e');
+      rethrow;
+    }
     notifyListeners();
   }
 

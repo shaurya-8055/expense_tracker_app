@@ -321,7 +321,13 @@ app.post('/auth/verify-phone', async (req, res) => {
 app.post('/api/users/check', async (req, res) => {
     try {
         const { phone } = req.body;
-        const exists = usersByPhone.has(phone);
+        
+        const result = await pool.query(
+            'SELECT id FROM users WHERE phone = $1',
+            [phone]
+        );
+        
+        const exists = result.rows.length > 0;
         
         console.log(`Checking if user exists for phone ${phone}: ${exists}`);
         res.json({ exists });
@@ -334,9 +340,20 @@ app.post('/api/users/check', async (req, res) => {
 app.post('/api/users/by-phone', async (req, res) => {
     try {
         const { phone } = req.body;
-        const user = usersByPhone.get(phone);
         
-        if (user) {
+        const result = await pool.query(
+            'SELECT id, name, phone, email, created_at FROM users WHERE phone = $1',
+            [phone]
+        );
+        
+        if (result.rows.length > 0) {
+            const user = {
+                id: result.rows[0].id,
+                name: result.rows[0].name,
+                phone: result.rows[0].phone,
+                email: result.rows[0].email
+            };
+            
             console.log(`Found user by phone ${phone}: ${user.name}`);
             res.json({ user });
         } else {
@@ -371,23 +388,32 @@ app.post('/api/users/register', async (req, res) => {
     }
 });
 
-app.post('/api/users/search', async (req, res) => {
+app.post('/api/users/search', authenticateToken, async (req, res) => {
     try {
         const { query } = req.body;
-        const currentUserId = req.headers.authorization?.replace('Bearer ', '');
+        const currentUserId = req.user.id;
         
-        const results = Array.from(users.values()).filter(user => {
-            // Don't include current user in search results
-            if (user.id === currentUserId) return false;
-            
-            const lowerQuery = query.toLowerCase();
-            return user.name.toLowerCase().includes(lowerQuery) ||
-                   user.phone.includes(query) ||
-                   (user.email && user.email.toLowerCase().includes(lowerQuery));
-        });
+        const result = await pool.query(
+            `SELECT id, name, phone, email FROM users 
+             WHERE id != $1 AND (
+                 LOWER(name) LIKE LOWER($2) OR 
+                 phone LIKE $3 OR 
+                 LOWER(email) LIKE LOWER($2)
+             ) 
+             ORDER BY name ASC 
+             LIMIT 50`,
+            [currentUserId, `%${query}%`, `%${query}%`]
+        );
         
-        console.log(`Search for "${query}" returned ${results.length} results`);
-        res.json({ users: results });
+        const users = result.rows.map(row => ({
+            id: row.id,
+            name: row.name,
+            phone: row.phone,
+            email: row.email
+        }));
+        
+        console.log(`Search for "${query}" returned ${users.length} results`);
+        res.json({ users });
     } catch (error) {
         console.error('Search users error:', error);
         res.status(500).json({ error: 'Failed to search users' });
@@ -395,50 +421,105 @@ app.post('/api/users/search', async (req, res) => {
 });
 
 // Friends API
-app.get('/api/friends', async (req, res) => {
+app.get('/api/friends', authenticateToken, async (req, res) => {
     try {
-        const userId = req.headers.authorization?.replace('Bearer ', '');
+        const userId = req.user.id;
         
-        // For development, return mock data
-        // In production, this would query your database
-        res.json([
-            {
-                id: 'friend_1',
-                name: 'John Doe',
-                phone: '+1234567890',
-                email: 'john@example.com'
-            },
-            {
-                id: 'friend_2', 
-                name: 'Jane Smith',
-                phone: '+1234567891',
-                email: 'jane@example.com'
-            }
-        ]);
+        const result = await pool.query(
+            `SELECT id, name, phone_number, email, created_at 
+             FROM friends 
+             WHERE user_id = $1 
+             ORDER BY name ASC`,
+            [userId]
+        );
+        
+        const friends = result.rows.map(row => ({
+            id: row.id,
+            name: row.name,
+            phoneNumber: row.phone_number,
+            email: row.email
+        }));
+        
+        res.json(friends);
     } catch (error) {
         console.error('Get friends error:', error);
         res.status(500).json({ error: 'Failed to get friends' });
     }
 });
 
-app.post('/api/friends', async (req, res) => {
+app.post('/api/friends', authenticateToken, async (req, res) => {
     try {
-        const userId = req.headers.authorization?.replace('Bearer ', '');
-        const friend = req.body;
+        const userId = req.user.id;
+        const { id, name, phoneNumber, email } = req.body;
         
-        console.log(`Adding friend for user ${userId}:`, friend);
+        await pool.query(
+            `INSERT INTO friends (id, user_id, name, phone_number, email, created_at) 
+             VALUES ($1, $2, $3, $4, $5, NOW())`,
+            [id, userId, name, phoneNumber, email]
+        );
+        
+        console.log(`Added friend for user ${userId}:`, { id, name, phoneNumber });
         
         // Broadcast to other users
         broadcast(userId, {
             type: 'friend_added',
-            data: friend,
+            data: { id, name, phoneNumber, email },
             userId: userId
         });
         
-        res.json({ success: true, friend });
+        res.json({ success: true, id });
     } catch (error) {
         console.error('Add friend error:', error);
         res.status(500).json({ error: 'Failed to add friend' });
+    }
+});
+
+app.put('/api/friends/:id', authenticateToken, async (req, res) => {
+    try {
+        const userId = req.user.id;
+        const friendId = req.params.id;
+        const { name, phoneNumber, email } = req.body;
+        
+        const result = await pool.query(
+            `UPDATE friends 
+             SET name = $1, phone_number = $2, email = $3, updated_at = NOW()
+             WHERE id = $4 AND user_id = $5`,
+            [name, phoneNumber, email, friendId, userId]
+        );
+        
+        if (result.rowCount === 0) {
+            return res.status(404).json({ error: 'Friend not found or access denied' });
+        }
+        
+        console.log(`Updated friend ${friendId} for user ${userId}`);
+        
+        res.json({ success: true });
+    } catch (error) {
+        console.error('Update friend error:', error);
+        res.status(500).json({ error: 'Failed to update friend' });
+    }
+});
+
+app.delete('/api/friends/:id', authenticateToken, async (req, res) => {
+    try {
+        const userId = req.user.id;
+        const friendId = req.params.id;
+        
+        const result = await pool.query(
+            `DELETE FROM friends WHERE id = $1 AND user_id = $2`,
+            [friendId, userId]
+        );
+        
+        if (result.rowCount === 0) {
+            return res.status(404).json({ error: 'Friend not found or access denied' });
+        }
+        
+        console.log(`Deleted friend ${friendId} for user ${userId}`);
+        
+        res.json({ success: true });
+    } catch (error) {
+        console.error('Delete friend error:', error);
+        res.status(500).json({ error: 'Failed to delete friend' });
     }
 });
 
@@ -493,29 +574,100 @@ app.post('/api/group-expenses', async (req, res) => {
 });
 
 // Personal Expenses API
-app.get('/api/personal-expenses', async (req, res) => {
+app.get('/api/personal-expenses', authenticateToken, async (req, res) => {
     try {
-        const userId = req.headers.authorization?.replace('Bearer ', '');
+        const userId = req.user.id;
         
-        // For development, return empty array
-        res.json([]);
+        const result = await pool.query(
+            `SELECT id, title, amount, date, category, note, created_at 
+             FROM personal_expenses 
+             WHERE user_id = $1 
+             ORDER BY date DESC, created_at DESC`,
+            [userId]
+        );
+        
+        const expenses = result.rows.map(row => ({
+            id: row.id,
+            title: row.title,
+            amount: parseFloat(row.amount),
+            date: row.date,
+            category: row.category,
+            note: row.note
+        }));
+        
+        res.json(expenses);
     } catch (error) {
         console.error('Get personal expenses error:', error);
         res.status(500).json({ error: 'Failed to get personal expenses' });
     }
 });
 
-app.post('/api/personal-expenses', async (req, res) => {
+app.post('/api/personal-expenses', authenticateToken, async (req, res) => {
     try {
-        const userId = req.headers.authorization?.replace('Bearer ', '');
-        const expense = req.body;
+        const userId = req.user.id;
+        const { id, title, amount, date, category, note } = req.body;
         
-        console.log(`Adding personal expense for user ${userId}:`, expense);
+        await pool.query(
+            `INSERT INTO personal_expenses (id, user_id, title, amount, date, category, note, created_at) 
+             VALUES ($1, $2, $3, $4, $5, $6, $7, NOW())`,
+            [id, userId, title, amount, date, category, note]
+        );
         
-        res.json({ success: true, expense });
+        console.log(`Added personal expense for user ${userId}:`, { id, title, amount });
+        
+        res.json({ success: true, id });
     } catch (error) {
         console.error('Add personal expense error:', error);
         res.status(500).json({ error: 'Failed to add personal expense' });
+    }
+});
+
+app.put('/api/personal-expenses/:id', authenticateToken, async (req, res) => {
+    try {
+        const userId = req.user.id;
+        const expenseId = req.params.id;
+        const { title, amount, date, category, note } = req.body;
+        
+        const result = await pool.query(
+            `UPDATE personal_expenses 
+             SET title = $1, amount = $2, date = $3, category = $4, note = $5, updated_at = NOW()
+             WHERE id = $6 AND user_id = $7`,
+            [title, amount, date, category, note, expenseId, userId]
+        );
+        
+        if (result.rowCount === 0) {
+            return res.status(404).json({ error: 'Expense not found or access denied' });
+        }
+        
+        console.log(`Updated personal expense ${expenseId} for user ${userId}`);
+        
+        res.json({ success: true });
+    } catch (error) {
+        console.error('Update personal expense error:', error);
+        res.status(500).json({ error: 'Failed to update personal expense' });
+    }
+});
+
+app.delete('/api/personal-expenses/:id', authenticateToken, async (req, res) => {
+    try {
+        const userId = req.user.id;
+        const expenseId = req.params.id;
+        
+        const result = await pool.query(
+            `DELETE FROM personal_expenses WHERE id = $1 AND user_id = $2`,
+            [expenseId, userId]
+        );
+        
+        if (result.rowCount === 0) {
+            return res.status(404).json({ error: 'Expense not found or access denied' });
+        }
+        
+        console.log(`Deleted personal expense ${expenseId} for user ${userId}`);
+        
+        res.json({ success: true });
+    } catch (error) {
+        console.error('Delete personal expense error:', error);
+        res.status(500).json({ error: 'Failed to delete personal expense' });
     }
 });
 
