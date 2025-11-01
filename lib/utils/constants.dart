@@ -82,18 +82,21 @@ class AppStrings {
 // Server Configuration
 class ServerConfig {
   // Production URL (replace with your Vercel URL)
-  static const String productionUrl = 'https://expense-tracker-app-rosy-six.vercel.app';
-  
+  static const String productionUrl =
+      'https://expense-tracker-app-rosy-six.vercel.app';
+
   // Local development URLs
   static const String localUrl = 'http://10.0.2.2:8080'; // For Android emulator
-  
+
   // Switch between production and local
   static const bool useProduction = true; // Set to false for local development
-  
+
   static String get baseUrl => useProduction ? productionUrl : localUrl;
-  static String get wsUrl => useProduction 
-    ? productionUrl.replaceFirst('https://', 'wss://').replaceFirst('http://', 'ws://') 
-    : localUrl.replaceFirst('http://', 'ws://');
+  static String get wsUrl => useProduction
+      ? productionUrl
+            .replaceFirst('https://', 'wss://')
+            .replaceFirst('http://', 'ws://')
+      : localUrl.replaceFirst('http://', 'ws://');
 
   // API Endpoints
   static const String authRegister = '/auth/register';
