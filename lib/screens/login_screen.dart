@@ -21,7 +21,7 @@ class _LoginScreenState extends State<LoginScreen> {
   bool _isLoading = false;
   bool _obscurePassword = true;
   String? _errorMessage;
-  
+
   // Demo credentials
   static const String _demoPhone = '+91 98765 43210';
   static const String _demoPassword = 'demo123';
@@ -43,10 +43,10 @@ class _LoginScreenState extends State<LoginScreen> {
     // Fill demo credentials
     _phoneController.text = _demoPhone;
     _passwordController.text = _demoPassword;
-    
+
     // Wait a moment for the UI to update
     await Future.delayed(const Duration(milliseconds: 500));
-    
+
     // Perform login
     setState(() {
       _isLoading = true;
@@ -55,19 +55,19 @@ class _LoginScreenState extends State<LoginScreen> {
 
     // Simulate API call delay for better UX
     await Future.delayed(const Duration(milliseconds: 1000));
-    
+
     // For demo purposes, we'll simulate a successful login
     // In a real app, you'd call the actual API
     if (mounted) {
       setState(() {
         _isLoading = false;
       });
-      
+
       // Navigate directly to main screen for demo
       Navigator.of(context).pushReplacement(
         MaterialPageRoute(builder: (context) => const MainScreen()),
       );
-      
+
       // Show success message
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
@@ -160,7 +160,7 @@ class _LoginScreenState extends State<LoginScreen> {
                 alignment: Alignment.topRight,
                 child: ConnectionStatusBadge(),
               ),
-              
+
               const SizedBox(height: 60),
 
               // App Logo and Title
@@ -198,140 +198,142 @@ class _LoginScreenState extends State<LoginScreen> {
                   const SizedBox(height: 8),
                   Text(
                     'Sign in to continue to ${AppStrings.appName}',
-                    style: TextStyle(
-                      fontSize: 16,
-                      color: Colors.grey[600],
-                    ),
+                    style: TextStyle(fontSize: 16, color: Colors.grey[600]),
                   ),
                 ],
               ),
 
-                  const SizedBox(height: 48),
+              const SizedBox(height: 48),
 
-                  // Login Form Card
-                  Container(
-                    padding: const EdgeInsets.all(24),
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      borderRadius: BorderRadius.circular(20),
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.black.withOpacity(0.1),
-                          blurRadius: 20,
-                          offset: const Offset(0, 10),
-                        ),
-                      ],
+              // Login Form Card
+              Container(
+                padding: const EdgeInsets.all(24),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(20),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withOpacity(0.1),
+                      blurRadius: 20,
+                      offset: const Offset(0, 10),
                     ),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.stretch,
-                      children: [
-                        // Phone Number Field
-                        Container(
-                          decoration: BoxDecoration(
-                            color: AppColors.background,
-                            borderRadius: BorderRadius.circular(12),
-                            border: Border.all(
-                              color: AppColors.textSecondary.withOpacity(0.2),
-                            ),
-                          ),
-                          child: Padding(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 16,
-                              vertical: 4,
-                            ),
-                            child: TextFormField(
-                              controller: _phoneController,
-                              keyboardType: TextInputType.phone,
-                              inputFormatters: [
-                                FilteringTextInputFormatter.allow(
-                                  RegExp(r'[0-9+\-\s\(\)]'),
-                                ),
-                              ],
-                              decoration: const InputDecoration(
-                                labelText: 'Phone Number',
-                                hintText: '+91 12345 67890',
-                                prefixIcon: Icon(Icons.phone, color: AppColors.primary),
-                                border: InputBorder.none,
-                                labelStyle: TextStyle(color: AppColors.textSecondary),
-                              ),
-                              validator: _validatePhoneNumber,
-                            ),
-                          ),
+                  ],
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    // Phone Number Field
+                    Container(
+                      decoration: BoxDecoration(
+                        color: AppColors.background,
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(
+                          color: AppColors.textSecondary.withOpacity(0.2),
                         ),
-
-                        const SizedBox(height: 16),
-
-                        // Password Field
-                        Container(
-                          decoration: BoxDecoration(
-                            color: AppColors.background,
-                            borderRadius: BorderRadius.circular(12),
-                            border: Border.all(
-                              color: AppColors.textSecondary.withOpacity(0.2),
-                            ),
-                          ),
-                          child: Padding(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 16,
-                              vertical: 4,
-                            ),
-                            child: TextFormField(
-                              controller: _passwordController,
-                              obscureText: _obscurePassword,
-                              decoration: InputDecoration(
-                                labelText: 'Password',
-                                hintText: 'Enter your password',
-                                prefixIcon: const Icon(
-                                  Icons.lock,
-                                  color: AppColors.primary,
-                                ),
-                                suffixIcon: IconButton(
-                                  icon: Icon(
-                                    _obscurePassword
-                                        ? Icons.visibility
-                                        : Icons.visibility_off,
-                                    color: AppColors.textSecondary,
-                                  ),
-                                  onPressed: _togglePasswordVisibility,
-                                ),
-                                border: InputBorder.none,
-                                labelStyle: const TextStyle(
-                                  color: AppColors.textSecondary,
-                                ),
-                              ),
-                              validator: _validatePassword,
-                            ),
-                          ),
+                      ),
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 16,
+                          vertical: 4,
                         ),
-
-                        if (_errorMessage != null) ...[
-                          const SizedBox(height: 16),
-                          Container(
-                            padding: const EdgeInsets.all(12),
-                            decoration: BoxDecoration(
-                              color: AppColors.error.withOpacity(0.1),
-                              borderRadius: BorderRadius.circular(8),
-                              border: Border.all(
-                                color: AppColors.error.withOpacity(0.3),
-                              ),
+                        child: TextFormField(
+                          controller: _phoneController,
+                          keyboardType: TextInputType.phone,
+                          inputFormatters: [
+                            FilteringTextInputFormatter.allow(
+                              RegExp(r'[0-9+\-\s\(\)]'),
                             ),
-                            child: Row(
-                              children: [
-                                Icon(Icons.error, color: AppColors.error, size: 20),
-                                const SizedBox(width: 8),
-                                Expanded(
-                                  child: Text(
-                                    _errorMessage!,
-                                    style: const TextStyle(color: AppColors.error),
-                                  ),
-                                ),
-                              ],
+                          ],
+                          decoration: const InputDecoration(
+                            labelText: 'Phone Number',
+                            hintText: '+91 12345 67890',
+                            prefixIcon: Icon(
+                              Icons.phone,
+                              color: AppColors.primary,
+                            ),
+                            border: InputBorder.none,
+                            labelStyle: TextStyle(
+                              color: AppColors.textSecondary,
                             ),
                           ),
-                        ],
-                      ],
+                          validator: _validatePhoneNumber,
+                        ),
+                      ),
                     ),
-                  ),
+
+                    const SizedBox(height: 16),
+
+                    // Password Field
+                    Container(
+                      decoration: BoxDecoration(
+                        color: AppColors.background,
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(
+                          color: AppColors.textSecondary.withOpacity(0.2),
+                        ),
+                      ),
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 16,
+                          vertical: 4,
+                        ),
+                        child: TextFormField(
+                          controller: _passwordController,
+                          obscureText: _obscurePassword,
+                          decoration: InputDecoration(
+                            labelText: 'Password',
+                            hintText: 'Enter your password',
+                            prefixIcon: const Icon(
+                              Icons.lock,
+                              color: AppColors.primary,
+                            ),
+                            suffixIcon: IconButton(
+                              icon: Icon(
+                                _obscurePassword
+                                    ? Icons.visibility
+                                    : Icons.visibility_off,
+                                color: AppColors.textSecondary,
+                              ),
+                              onPressed: _togglePasswordVisibility,
+                            ),
+                            border: InputBorder.none,
+                            labelStyle: const TextStyle(
+                              color: AppColors.textSecondary,
+                            ),
+                          ),
+                          validator: _validatePassword,
+                        ),
+                      ),
+                    ),
+
+                    if (_errorMessage != null) ...[
+                      const SizedBox(height: 16),
+                      Container(
+                        padding: const EdgeInsets.all(12),
+                        decoration: BoxDecoration(
+                          color: AppColors.error.withOpacity(0.1),
+                          borderRadius: BorderRadius.circular(8),
+                          border: Border.all(
+                            color: AppColors.error.withOpacity(0.3),
+                          ),
+                        ),
+                        child: Row(
+                          children: [
+                            Icon(Icons.error, color: AppColors.error, size: 20),
+                            const SizedBox(width: 8),
+                            Expanded(
+                              child: Text(
+                                _errorMessage!,
+                                style: const TextStyle(color: AppColors.error),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ],
+                ),
+              ),
 
               const SizedBox(height: 40),
 
@@ -342,7 +344,10 @@ class _LoginScreenState extends State<LoginScreen> {
                 decoration: BoxDecoration(
                   borderRadius: BorderRadius.circular(16),
                   gradient: LinearGradient(
-                    colors: [AppColors.primary, AppColors.primary.withOpacity(0.8)],
+                    colors: [
+                      AppColors.primary,
+                      AppColors.primary.withOpacity(0.8),
+                    ],
                     begin: Alignment.centerLeft,
                     end: Alignment.centerRight,
                   ),
@@ -375,7 +380,11 @@ class _LoginScreenState extends State<LoginScreen> {
                       : const Row(
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
-                            Icon(Icons.rocket_launch, size: 20, color: Colors.white),
+                            Icon(
+                              Icons.rocket_launch,
+                              size: 20,
+                              color: Colors.white,
+                            ),
                             SizedBox(width: 12),
                             Text(
                               'Try Demo Login',
@@ -389,9 +398,9 @@ class _LoginScreenState extends State<LoginScreen> {
                         ),
                 ),
               ),
-              
+
               const SizedBox(height: 16),
-              
+
               // Regular Login Button
               Container(
                 width: double.infinity,
@@ -416,7 +425,7 @@ class _LoginScreenState extends State<LoginScreen> {
               ),
 
               const SizedBox(height: 20),
-              
+
               // Demo Info
               Container(
                 padding: const EdgeInsets.all(16),
@@ -465,7 +474,9 @@ class _LoginScreenState extends State<LoginScreen> {
                     : () {
                         ScaffoldMessenger.of(context).showSnackBar(
                           SnackBar(
-                            content: const Text('Forgot password feature coming soon!'),
+                            content: const Text(
+                              'Forgot password feature coming soon!',
+                            ),
                             backgroundColor: AppColors.primary,
                           ),
                         );

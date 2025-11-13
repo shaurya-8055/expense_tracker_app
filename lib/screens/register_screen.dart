@@ -178,7 +178,10 @@ class _RegisterScreenState extends State<RegisterScreen> {
                           ),
                         ],
                       ),
-                      child: const Icon(Icons.arrow_back, color: AppColors.primary),
+                      child: const Icon(
+                        Icons.arrow_back,
+                        color: AppColors.primary,
+                      ),
                     ),
                     onPressed: () => Navigator.of(context).pop(),
                   ),
@@ -223,10 +226,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                   const SizedBox(height: 8),
                   Text(
                     'Join us to start tracking your expenses',
-                    style: TextStyle(
-                      fontSize: 16,
-                      color: Colors.grey[600],
-                    ),
+                    style: TextStyle(fontSize: 16, color: Colors.grey[600]),
                   ),
                 ],
               ),
@@ -277,7 +277,9 @@ class _RegisterScreenState extends State<RegisterScreen> {
                                 color: AppColors.primary,
                               ),
                               border: InputBorder.none,
-                              labelStyle: TextStyle(color: AppColors.textSecondary),
+                              labelStyle: TextStyle(
+                                color: AppColors.textSecondary,
+                              ),
                             ),
                             validator: _validateName,
                           ),
@@ -316,7 +318,9 @@ class _RegisterScreenState extends State<RegisterScreen> {
                                 color: AppColors.primary,
                               ),
                               border: InputBorder.none,
-                              labelStyle: TextStyle(color: AppColors.textSecondary),
+                              labelStyle: TextStyle(
+                                color: AppColors.textSecondary,
+                              ),
                             ),
                             validator: _validatePhoneNumber,
                           ),
@@ -345,9 +349,14 @@ class _RegisterScreenState extends State<RegisterScreen> {
                             decoration: const InputDecoration(
                               labelText: 'Email (Optional)',
                               hintText: 'your.email@example.com',
-                              prefixIcon: Icon(Icons.email, color: AppColors.primary),
+                              prefixIcon: Icon(
+                                Icons.email,
+                                color: AppColors.primary,
+                              ),
                               border: InputBorder.none,
-                              labelStyle: TextStyle(color: AppColors.textSecondary),
+                              labelStyle: TextStyle(
+                                color: AppColors.textSecondary,
+                              ),
                             ),
                             validator: _validateEmail,
                           ),
@@ -457,12 +466,18 @@ class _RegisterScreenState extends State<RegisterScreen> {
                           ),
                           child: Row(
                             children: [
-                              Icon(Icons.error, color: AppColors.error, size: 20),
+                              Icon(
+                                Icons.error,
+                                color: AppColors.error,
+                                size: 20,
+                              ),
                               const SizedBox(width: 8),
                               Expanded(
                                 child: Text(
                                   _errorMessage!,
-                                  style: const TextStyle(color: AppColors.error),
+                                  style: const TextStyle(
+                                    color: AppColors.error,
+                                  ),
                                 ),
                               ),
                             ],
@@ -483,7 +498,10 @@ class _RegisterScreenState extends State<RegisterScreen> {
                 decoration: BoxDecoration(
                   borderRadius: BorderRadius.circular(16),
                   gradient: LinearGradient(
-                    colors: [AppColors.primary, AppColors.primary.withOpacity(0.8)],
+                    colors: [
+                      AppColors.primary,
+                      AppColors.primary.withOpacity(0.8),
+                    ],
                     begin: Alignment.centerLeft,
                     end: Alignment.centerRight,
                   ),
