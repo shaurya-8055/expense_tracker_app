@@ -90,7 +90,7 @@ class SyncedGroupExpenseProvider with ChangeNotifier {
     final userId = update['userId'];
 
     // Don't process updates from self
-    if (userId == DatabaseService.currentUserId) return;
+    // if (userId == DatabaseService.currentUserId) return;
 
     switch (type) {
       case 'friend_added':

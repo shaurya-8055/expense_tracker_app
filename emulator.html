@@ -1,0 +1,383 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Expense Tracker</title>
+    
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <style>
+        /* --- CORE LAYOUT --- */
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: #f5f5f7;
+            height: 100vh;
+            width: 100vw;
+            overflow: hidden; 
+        }
+
+        .container {
+            display: flex;
+            height: 100vh;
+            width: 100%;
+            overflow: hidden;
+        }
+
+        /* --- SIDEBAR (Hidden on Mobile) --- */
+        .control-panel {
+            background: #1d1d1f;
+            width: 350px;
+            height: 100vh;
+            padding: 24px;
+            color: white;
+            border-right: 1px solid #2d2d30;
+            overflow-y: auto;
+            flex-shrink: 0;
+            z-index: 20;
+            scrollbar-width: thin;
+            scrollbar-color: #4b5563 #1d1d1f;
+        }
+
+        /* --- DEVICE EMULATOR AREA --- */
+        .device-emulator {
+            flex: 1;
+            height: 100vh;
+            background: radial-gradient(circle at center, #e2e8f0 0%, #cbd5e1 100%);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            overflow: hidden;
+            position: relative;
+        }
+
+        /* Wrapper holds Phone + Toolbar Side-by-Side */
+        .device-wrapper {
+            position: relative;
+            display: flex;
+            flex-direction: row; /* Always Side-by-Side */
+            align-items: center;
+            justify-content: center;
+            gap: 25px; /* Distinct gap between phone and tools */
+            transition: transform 0.1s linear;
+            transform-origin: center center;
+            padding: 20px; /* Padding for the scaler */
+        }
+
+        /* --- IPHONE 15 PRO FRAME --- */
+        .device-frame.iphone {
+            width: 393px; 
+            height: 852px; 
+            border-radius: 54px; 
+            background: #2b2b2b; 
+            box-shadow: 
+                inset 0 0 0 2px #58585a, 
+                inset 0 0 0 6px #000,     
+                0 0 0 3px #454545,        
+                0 30px 80px rgba(0, 0, 0, 0.6); 
+            padding: 10px; 
+            position: relative;
+            z-index: 10;
+            flex-shrink: 0; /* Prevent squishing */
+        }
+
+        /* Dynamic Island */
+        .device-frame.iphone::before {
+            content: '';
+            position: absolute;
+            top: 22px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 122px;
+            height: 36px;
+            background: #000;
+            border-radius: 20px;
+            z-index: 25;
+            pointer-events: none;
+        }
+
+        /* --- REALISTIC PHYSICAL SIDE BUTTONS --- */
+        /* Attached to the frame, not the toolbar */
+        .btn-physical {
+            position: absolute;
+            background: #383838; 
+            border-radius: 2px 0 0 2px;
+            width: 4px;
+            box-shadow: inset -1px 0 1px rgba(255,255,255,0.1);
+            z-index: 5;
+        }
+
+        .btn-action { top: 110px; left: -4px; height: 26px; } 
+        .btn-vol-up { top: 155px; left: -4px; height: 45px; }
+        .btn-vol-down { top: 215px; left: -4px; height: 45px; }
+        .btn-power { top: 160px; right: -4px; height: 80px; border-radius: 0 2px 2px 0; }
+
+        /* --- OTHER DEVICES --- */
+        .device-frame.samsung { width: 380px; height: 840px; border-radius: 28px; border: 3px solid #1a1a1a; background: #000; box-shadow: 0 0 0 2px #555, 0 30px 80px rgba(0,0,0,0.5); padding: 3px; flex-shrink: 0; }
+        .device-frame.samsung::before { content: ''; position: absolute; top: 15px; left: 50%; transform: translateX(-50%); width: 14px; height: 14px; background: #000; border: 1px solid #333; border-radius: 50%; z-index: 20; }
+        
+        .device-frame.ipad { width: 820px; height: 1100px; border-radius: 24px; border: 12px solid #2d2d2d; padding: 0; flex-shrink: 0; }
+        .device-frame.desktop { width: 1280px; height: 800px; border-radius: 12px; border: 1px solid #333; background: #fff; padding-top: 24px; flex-shrink: 0; }
+        .device-frame.desktop::before { content: ''; position: absolute; top: 8px; left: 12px; width: 50px; height: 8px; background: #ddd; border-radius: 4px; box-shadow: 60px 0 0 #ddd, 120px 0 0 #ddd; }
+
+        /* --- SCREEN --- */
+        .device-screen { width: 100%; height: 100%; overflow: hidden; background: #fff; position: relative; }
+        .device-frame.iphone .device-screen { border-radius: 44px; }
+        .device-frame.samsung .device-screen { border-radius: 22px; }
+        .device-frame.ipad .device-screen { border-radius: 12px; }
+        .app-iframe { width: 100%; height: 100%; border: none; display: block; background: white; }
+
+        /* --- TOOLS (ACTION BAR) --- */
+        /* Positioned as a flex item next to the phone */
+        .device-tools {
+            display: flex;
+            flex-direction: column; /* Stack buttons vertically */
+            gap: 16px;
+            padding: 16px 10px;
+            background: rgba(255, 255, 255, 0.9);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border-radius: 30px; /* Pill shape */
+            box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+            border: 1px solid rgba(255, 255, 255, 0.5);
+            z-index: 50;
+            flex-shrink: 0; /* Don't shrink the toolbar */
+        }
+
+        .tool-btn {
+            width: 44px; height: 44px; border-radius: 50%; border: none; background: white;
+            color: #475569; font-size: 18px; cursor: pointer;
+            display: flex; align-items: center; justify-content: center;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.08); transition: 0.2s;
+        }
+        .tool-btn:hover { background: #007aff; color: white; transform: scale(1.1); }
+        .tool-btn:active { transform: scale(0.95); }
+
+        /* --- UTILS --- */
+        .loading-screen { position: absolute; inset: 0; background: #0f172a; display: flex; flex-direction: column; justify-content: center; align-items: center; color: white; z-index: 50; transition: opacity 0.5s; }
+        .loading-screen.hidden { opacity: 0; pointer-events: none; }
+        .spinner { width: 30px; height: 30px; border: 3px solid #334155; border-top-color: #60a5fa; border-radius: 50%; animation: spin 1s linear infinite; margin-bottom: 10px; }
+        @keyframes spin { to { transform: rotate(360deg); } }
+        .flash-overlay { position: absolute; inset: 0; background: white; z-index: 100; opacity: 0; pointer-events: none; }
+        .flash-anim { animation: flash 0.3s ease-out; }
+        @keyframes flash { 0% { opacity: 0.8; } 100% { opacity: 0; } }
+
+        /* Control Panel Styling */
+        .app-logo { width: 48px; height: 48px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border-radius: 12px; display: flex; align-items: center; justify-content: center; margin-bottom: 16px; color: white; font-size: 20px; font-weight: bold; }
+        .app-title { font-size: 20px; font-weight: 600; margin-bottom: 4px; }
+        .section-title { color: #9ca3af; margin: 20px 0 10px; font-size: 12px; text-transform: uppercase; letter-spacing: 1px; }
+        .device-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+        .device-btn { background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); border-radius: 8px; padding: 12px; cursor: pointer; color: #d1d5db; display: flex; align-items: center; gap: 10px; transition: 0.2s; }
+        .device-btn:hover { background: rgba(255,255,255,0.1); }
+        .device-btn.active { background: #007aff; border-color: #007aff; color: white; }
+        .feature-list { list-style: none; color: #9ca3af; font-size: 13px; line-height: 2; }
+        .feature-list i { color: #007aff; margin-right: 8px; }
+
+        /* --- MOBILE SPECIFIC (Strict "Static Fixed Device") --- */
+        @media (max-width: 900px) {
+            /* Hide Sidebar */
+            .control-panel { display: none !important; }
+            .container { width: 100vw; height: 100vh; }
+            
+            /* Full Screen Emulator Area */
+            .device-emulator {
+                width: 100vw; height: 100vh;
+                background: #111; /* Dark aesthetic for focus */
+                padding: 0;
+                align-items: center;
+            }
+
+            /* Toolbar Logic for Mobile:
+               Keep it side-by-side (flex-row) but the scaler will shrink 
+               the whole group so it fits. */
+            .device-wrapper {
+                gap: 15px; /* Slightly tighter gap on mobile */
+            }
+            
+            /* Toolbar Styling for Mobile */
+            .device-tools {
+                background: rgba(255, 255, 255, 0.15);
+                border: 1px solid rgba(255,255,255,0.2);
+            }
+            .tool-btn {
+                background: rgba(0,0,0,0.5);
+                color: #fff;
+                border: 1px solid rgba(255,255,255,0.1);
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="control-panel">
+            <div class="app-header">
+                <div class="app-logo">E</div>
+                <div class="app-title">Expense Tracker</div>
+                <div style="color:#86868b; font-size:14px;">Personal Finance Management</div>
+            </div>
+
+            <div class="section-title">Device Simulator</div>
+            <div class="device-grid">
+                <button class="device-btn active" data-device="iphone">
+                    <i class="fab fa-apple"></i> iPhone 15 Pro
+                </button>
+                <button class="device-btn" data-device="samsung">
+                    <i class="fab fa-android"></i> S23 Ultra
+                </button>
+                <button class="device-btn" data-device="ipad">
+                    <i class="fas fa-tablet-alt"></i> iPad Air
+                </button>
+                <button class="device-btn" data-device="desktop">
+                    <i class="fas fa-desktop"></i> Desktop
+                </button>
+            </div>
+
+            <div class="section-title">Live Features</div>
+            <ul class="feature-list">
+                <li><i class="fas fa-check-circle"></i> Expense Tracking</li>
+                <li><i class="fas fa-check-circle"></i> Budget Management</li>
+                <li><i class="fas fa-check-circle"></i> Udhari (Credit/Debt)</li>
+                <li><i class="fas fa-check-circle"></i> Group Expenses</li>
+                <li><i class="fas fa-check-circle"></i> Analytics & Charts</li>
+                <li><i class="fas fa-check-circle"></i> Financial Dashboard</li>
+            </ul>
+            
+            <div style="margin-top: 30px; padding: 15px; background: rgba(255,255,255,0.05); border-radius: 8px; font-size: 13px; color: #9ca3af;">
+                <i class="fas fa-mouse-pointer"></i> The toolbar is now positioned to the side of the device for better visibility.
+            </div>
+        </div>
+
+        <div class="device-emulator">
+            <div class="device-wrapper" id="deviceWrapper">
+                
+                <div class="device-frame iphone" id="deviceFrame">
+                    <div class="btn-physical btn-action"></div>
+                    <div class="btn-physical btn-vol-up"></div>
+                    <div class="btn-physical btn-vol-down"></div>
+                    <div class="btn-physical btn-power"></div>
+
+                    <div class="device-screen">
+                        <div class="flash-overlay" id="flash"></div>
+                        <div class="loading-screen" id="loadingScreen">
+                            <div class="spinner"></div>
+                            <div>Loading App...</div>
+                        </div>
+                        <iframe 
+                            id="appIframe" 
+                            class="app-iframe" 
+                            src="https://shaurya-8055.github.io/expense_tracker_app/"
+                            onload="hideLoader()"
+                            title="Expense Tracker App">
+                        </iframe>
+                    </div>
+                </div>
+
+                <div class="device-tools">
+                    <button class="tool-btn" onclick="goBack()" title="Back">
+                        <i class="fas fa-arrow-left"></i>
+                    </button>
+                    <button class="tool-btn" onclick="goHome()" title="Home">
+                        <i class="fas fa-home"></i>
+                    </button>
+                    <button class="tool-btn" onclick="refreshApp()" title="Refresh">
+                        <i class="fas fa-redo-alt"></i>
+                    </button>
+                    <button class="tool-btn" onclick="takeScreenshot()" title="Screenshot">
+                        <i class="fas fa-camera"></i>
+                    </button>
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // --- Configuration ---
+        const devices = {
+            iphone: 'iphone',
+            samsung: 'samsung',
+            ipad: 'ipad',
+            desktop: 'desktop'
+        };
+
+        const iframe = document.getElementById('appIframe');
+        const homeUrl = "https://shaurya-8055.github.io/expense_tracker_app/";
+
+        // --- Device Switching ---
+        document.querySelectorAll('.device-btn').forEach(btn => {
+            btn.addEventListener('click', function() {
+                document.querySelectorAll('.device-btn').forEach(b => b.classList.remove('active'));
+                this.classList.add('active');
+                
+                const deviceFrame = document.getElementById('deviceFrame');
+                const btns = document.querySelectorAll('.btn-physical');
+                
+                Object.values(devices).forEach(cls => deviceFrame.classList.remove(cls));
+                deviceFrame.classList.add(this.dataset.device);
+                
+                // Toggle physical buttons
+                if(this.dataset.device === 'iphone') {
+                    btns.forEach(b => b.style.display = 'block');
+                } else {
+                    btns.forEach(b => b.style.display = 'none');
+                }
+                
+                setTimeout(adjustFrameSize, 50);
+            });
+        });
+
+        // --- Actions ---
+        function goHome() { showLoader(); iframe.src = homeUrl; }
+        function refreshApp() { showLoader(); iframe.src = iframe.src; }
+        function goBack() {
+            try { iframe.contentWindow.history.back(); } 
+            catch (e) { refreshApp(); }
+        }
+        function takeScreenshot() {
+            const flash = document.getElementById('flash');
+            flash.classList.add('flash-anim');
+            setTimeout(() => flash.classList.remove('flash-anim'), 300);
+        }
+        function showLoader() { document.getElementById('loadingScreen').classList.remove('hidden'); }
+        function hideLoader() { setTimeout(() => document.getElementById('loadingScreen').classList.add('hidden'), 800); }
+
+        // --- Smart Scale Logic ---
+        function adjustFrameSize() {
+            const wrapper = document.getElementById('deviceWrapper');
+            const container = document.querySelector('.device-emulator');
+            
+            wrapper.style.transform = 'none';
+            
+            // Padding depends on screen size
+            const padding = window.innerWidth < 900 ? 20 : 60; 
+            
+            const contentWidth = wrapper.offsetWidth;
+            const contentHeight = wrapper.offsetHeight;
+            const containerWidth = container.clientWidth;
+            const containerHeight = container.clientHeight;
+            
+            const scaleX = (containerWidth - padding) / contentWidth;
+            const scaleY = (containerHeight - padding) / contentHeight;
+            
+            // Allow scaling down indefinitely for mobile fitting
+            const scale = Math.min(scaleX, scaleY, 1); 
+            
+            wrapper.style.transform = `scale(${scale})`;
+        }
+
+        window.addEventListener('load', () => {
+            adjustFrameSize();
+            hideLoader();
+        });
+        
+        let resizeTimer;
+        window.addEventListener('resize', () => {
+            clearTimeout(resizeTimer);
+            resizeTimer = setTimeout(adjustFrameSize, 50);
+        });
+    </script>
+</body>
+</html>
